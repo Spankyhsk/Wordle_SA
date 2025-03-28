@@ -118,11 +118,11 @@ case class Game(mech:gamemechInterface, board:GamefieldInterface[GamefieldInterf
   }
 
   def setTargetWord(targetWordMap: Map[Int, String]): Unit={
-    mode.setTargetWord(targetWordMap)
+    mode.withTargetWord(targetWordMap)
   }
 
   def setLimit(Limit: Int): Unit={
-    mode.setLimit(Limit)
+    mode.withLimit(Limit)
   }
   def TargetwordToString():String={
     mode.toString()
