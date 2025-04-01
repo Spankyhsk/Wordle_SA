@@ -83,7 +83,7 @@ class FileIOXML extends FileIOInterface {
   def GameMechToXML(mech:gamemechInterface):xml.Elem={
     <Gamemech>{
       <winningboard>
-        {mech.getWinningboard().map{case(key,value) => <entry key={key.toString} value={value.toString}/>}
+        {mech.getWinningBoard().map{case(key,value) => <entry key={key.toString} value={value.toString}/>}
         }
       </winningboard>
       <anzahl>

@@ -37,7 +37,7 @@ case class Game(mech:gamemechInterface, board:GamefieldInterface[GamefieldInterf
   }
 
   def createwinningboard(): Unit = {
-    mech.buildwinningboard(board.getMap().size, 1)
+    mech.buildWinningBoard(board.getMap().size, 1)
   }
 
   def areYouWinningSon(guess: String): Boolean = {
@@ -50,7 +50,7 @@ case class Game(mech:gamemechInterface, board:GamefieldInterface[GamefieldInterf
   }
 
   def setWinningboard(wBoard: Map[Int, Boolean]) = {
-    mech.setWinningboard(wBoard)
+    mech.setWinningBoard(wBoard)
   }
 
   def setN(zahl: Integer): Unit = {
