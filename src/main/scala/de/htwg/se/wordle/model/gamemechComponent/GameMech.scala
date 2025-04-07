@@ -1,6 +1,7 @@
 package de.htwg.se.wordle.model.gamemechComponent
 
 import scala.collection.mutable
+import scala.util.Try
 
 // Klasse für den Spielmechanismus mit Strategie
 case class GameMech(
@@ -11,9 +12,13 @@ case class GameMech(
 
   def count(limit: Int): Boolean = versuch < limit
 
-  def controllLength(n: Int, wordLength: Int): Boolean = n == wordLength
+  def controllLength(n: Int, wordLength: Int): Either[Boolean, Boolean] =
+    if (n == wordLength) Right(true)    // Erfolg
+    else Left(false)                    // Fehler
 
-  def controllRealWord(guess: String): Boolean = guess.forall(_.isLetter)
+  def controllRealWord(guess: String): Either[Boolean, Boolean] = 
+    if (guess.forall(_.isLetter)) Right(true)
+    else Left(false)
 
   def buildWinningBoard(n: Int, key: Int): GameMech = {
     if (key <= n) {
@@ -28,7 +33,7 @@ case class GameMech(
     this
   }
 
-  def getWin(key: Int): Boolean = winningBoard.getOrElse(key, false)
+  def getWinOption(key: Int): Option[Boolean] = winningBoard.get(key)
 
   def areYouWinningSon(): Boolean = winningBoard.values.forall(_ == true)
 
@@ -41,25 +46,29 @@ case class GameMech(
   }
 
   def compareTargetGuess(n: Int, targetWord: Map[Int, String], guess: String): GameMech = {
-    if (winningBoard.contains(n) && !getWin(n)) {
-      val updatedBoard = guessStrategy.compareTargetGuess(targetWord(n), guess, n, winningBoard.toMap)
-      updatedBoard.foreach { case (key, value) => winningBoard(key) = value }
-      if (n < winningBoard.size)
-        compareTargetGuess(n + 1, targetWord, guess)
-    } else {
-      if (n < winningBoard.size)
-        compareTargetGuess(n + 1, targetWord, guess)
+    getWinOption(n) match {
+      case Some(false) => // Feld existiert & noch nicht gewonnen
+        targetWord.get(n) match {
+          case Some(target) =>
+            val updatedBoard = guessStrategy.compareTargetGuess(target, guess, n, winningBoard.toMap)
+            updatedBoard.foreach { case (key, value) => winningBoard(key) = value }
+          case None =>
+          // kein target vorhanden — eventuell loggen oder ignorieren
+        }
+      case _ => // entweder key fehlt oder schon gewonnen → nichts tun
     }
+
+    if (n < winningBoard.size) compareTargetGuess(n + 1, targetWord, guess)
     this
   }
 
-  def evaluateGuess(targetWord: String, guess: String): String =
-    guessStrategy.evaluateGuess(targetWord, guess)
+  def evaluateGuess(targetWord: String, guess: String): Try[String] =
+    Try(guessStrategy.evaluateGuess(targetWord, guess))
 
   def getN(): Int = versuch
 
   def setN(zahl: Integer): GameMech = {
-    versuch = zahl
+    Option(zahl).foreach(versuch = _)
     this
   }
 

@@ -4,6 +4,8 @@ import de.htwg.se.wordle.model.gamemechComponent.*
 import de.htwg.se.wordle.model.gamefieldComponent.*
 import de.htwg.se.wordle.model.gamemodeComponnent.*
 
+import scala.util.{Failure, Success}
+
 
 case class Game(mech:gamemechInterface, board:GamefieldInterface[GamefieldInterface[String]],var mode:GamemodeInterface)extends GameInterface{
   def this() = this(new GameMech, new gameboard(), gamemode(1))
@@ -23,17 +25,30 @@ case class Game(mech:gamemechInterface, board:GamefieldInterface[GamefieldInterf
   }
 
   def controllLength(n: Int): Boolean = {
-    mech.controllLength(n, mode.getTargetword()(1).length())
+    val result = mech.controllLength(n, mode.getTargetword()(1).length())
+    result match{
+      case Right(value) => value
+      case Left(error) =>
+        println("Falsche Wort Länge")
+        error
+    }
   }
 
   def controllRealWord(guess: String): Boolean = {
-    mech.controllRealWord(guess)
+    val result = mech.controllRealWord(guess)
+    result match{
+      case Right(value) => value
+      case Left(error) =>
+        println("Ungültiges Wort oder Zeichen")
+        error
+    }
   }
 
   def evaluateGuess(guess: String): Map[Int, String] = {
-    val keys: List[Int] = getTargetword().keys.toList.sorted // Stellen Sie sicher, dass die Schlüssel sortiert sind
-    val feedback: Map[Int, String] = keys.map(key => key -> mech.evaluateGuess(getTargetword()(key), guess)).toMap
-    feedback
+    // Verwende getOrElse, um das Targetwort zu holen
+    getTargetword().keys.toList.sorted.map { key =>
+      key -> mech.evaluateGuess(getTargetword()(key), guess).getOrElse("FEHLER")
+    }.toMap
   }
 
   def createwinningboard(): Unit = {
