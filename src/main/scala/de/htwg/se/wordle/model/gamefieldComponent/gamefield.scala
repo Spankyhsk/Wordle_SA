@@ -1,6 +1,7 @@
 package de.htwg.se.wordle.model.gamefieldComponent
 
 import scala.collection.mutable
+import scala.util.{Failure, Success, Try}
 
 //=====================================================================
 
@@ -45,17 +46,30 @@ case class gameboard(var Board: mutable.Map[Int, GamefieldInterface[String]] = m
   def setMap(boardmap: Map[Int, Map[Int, String]]): GamefieldInterface[GamefieldInterface[String]] = setMapR(boardmap.size, 1, boardmap)
 
   def setMapR(n: Int, key: Int, boardmap: Map[Int, Map[Int, String]]): GamefieldInterface[GamefieldInterface[String]] = {
-    val GameField = new gamefield()
-    GameField.SetMapper(boardmap(key))
-    Board += (key -> GameField)
-    if (key < n) setMapR(n, key + 1, boardmap)
-    this
+    Try {
+      val GameField = new gamefield()
+      GameField.SetMapper(boardmap(key))
+      Board += (key -> GameField)
+      if (key < n) setMapR(n, key + 1, boardmap)
+    } match {
+      case Success(_) => this
+      case Failure(exception) =>
+        println(s"Fehler beim Setzen der Map: ${exception.getMessage}")
+        Board -= key
+        this // Rückgabe des aktuellen Objekts im Fehlerfall
+    }
   }
 
   override def set(key: Int, feedback: String): Unit = {}
 
   def setR(n: Int, key: Int, feedback: Map[Int, String]): Unit = {
-    Board.get(n).foreach(_.set(key, feedback.getOrElse(n, "")))
+    Board.get(n).foreach { gameField =>
+      val feedbackValue = feedback.get(n)
+      feedbackValue match {
+        case Some(value) => gameField.set(key, value)
+        case None => println(s"Kein Feedback für Schlüssel $n gefunden")
+      }
+    }
     if (n < Board.size) setR(n + 1, key, feedback)
   }
 
