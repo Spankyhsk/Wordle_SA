@@ -21,7 +21,11 @@ case class Game(mech:gamemechInterface, board:GamefieldInterface[GamefieldInterf
   }
 
   def count(): Boolean = {
-    mech.count(mode.getLimit())
+    mech.count(mode.getLimit()) match{
+      case Some(true) => true
+      case Some(false) => false
+      case None => throw new IllegalStateException("Limit ist negativ")
+    }
   }
 
   def controllLength(n: Int): Boolean = {
@@ -57,7 +61,11 @@ case class Game(mech:gamemechInterface, board:GamefieldInterface[GamefieldInterf
 
   def areYouWinningSon(guess: String): Boolean = {
     mech.compareTargetGuess(1, getTargetword(), guess) //??
-    mech.areYouWinningSon()
+    mech.areYouWinningSon() match{
+      case Some(true) => true
+      case Some(false) => false
+      case None => throw new IllegalStateException("Gewinnstatus ist nicht verfügbar.")
+    }
   }
 
   def GuessTransform(guess: String): String = {

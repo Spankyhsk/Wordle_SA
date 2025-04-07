@@ -10,7 +10,10 @@ case class GameMech(
                      private var versuch: Int = 1
                    ) extends gamemechInterface {
 
-  def count(limit: Int): Boolean = versuch < limit
+  def count(limit: Int): Option[Boolean] = {
+    if (limit < 0) None
+    else Some(versuch < limit)
+  }
 
   def controllLength(n: Int, wordLength: Int): Either[Boolean, Boolean] =
     if (n == wordLength) Right(true)    // Erfolg
@@ -35,7 +38,11 @@ case class GameMech(
 
   def getWinOption(key: Int): Option[Boolean] = winningBoard.get(key)
 
-  def areYouWinningSon(): Boolean = winningBoard.values.forall(_ == true)
+  def areYouWinningSon(): Option[Boolean] = {
+    if (winningBoard.isEmpty) None
+    else Some(winningBoard.values.forall(_ == true))
+  }
+
 
   def GuessTransform(guess: String): String = guess.toUpperCase
 
