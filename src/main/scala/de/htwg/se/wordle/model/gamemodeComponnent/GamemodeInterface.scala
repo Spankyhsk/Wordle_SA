@@ -8,9 +8,9 @@ trait GamemodeInterface {
 
   def getWordList(): Array[String]
 
-  def setTargetWord(targetWordMap: Map[Int, String]): Unit
+  def withTargetWord(newTargetWord: Map[Int, String]): GamemodeInterface
 
-  def setLimit(Limit: Int): Unit
+  def withLimit(newLimit: Int): GamemodeInterface
   
   def toString():String
 }

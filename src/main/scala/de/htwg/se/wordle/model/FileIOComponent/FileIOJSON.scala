@@ -64,7 +64,7 @@ class FileIOJSON extends FileIOInterface{
     Json.obj(
       "game"->Json.obj(
         "mech"-> Json.obj(
-      "winningboard"-> mech.getWinningboard(),
+      "winningboard"-> mech.getWinningBoard(),
           "Versuch"-> mech.getN()
         ),
         "board" -> gameboardToJason(board.getMap()),
