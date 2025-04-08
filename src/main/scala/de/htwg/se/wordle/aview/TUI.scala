@@ -2,6 +2,7 @@ package de.htwg.se.wordle.aview
 
 import de.htwg.se.wordle.controller.ControllerInterface
 import de.htwg.se.wordle.util.{Event, Observer}
+import scala.util.{Try, Success, Failure}
 
 
 class TUI (controller: ControllerInterface)extends Observer:
@@ -22,21 +23,20 @@ class TUI (controller: ControllerInterface)extends Observer:
     }
   }
 
+
   def difficultyLevel(input: String): Int = {
-    try {
-      val level = input.toInt
-      if (level > 0 && level < 4) {
+    Try(input.toInt) match {
+      case Success(level) if level > 0 && level < 4 =>
         level
-      } else {
+      case Success(_) =>
         println("Falsche Angabe, es wird Level Einfach angefangen")
         1
-      }
-    } catch {
-      case _: NumberFormatException =>
+      case Failure(_) =>
         println("Falsche Angabe, es wird Level Einfach angefangen")
         1
     }
   }
+
   
 
   def scanInput(input: String): Unit ={
