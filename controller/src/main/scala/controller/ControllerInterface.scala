@@ -1,6 +1,6 @@
 package controller
 
-import de.htwg.se.wordle.util.Observable
+import util.Observable
 import scala.util.{Failure, Success, Try}
 
 trait ControllerInterface extends Observable{

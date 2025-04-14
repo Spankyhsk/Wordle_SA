@@ -1,6 +1,10 @@
 
 package controller
 
+import model.FileIOComponent.{FileIOInterface, FileIOJSON, FileIOXML}
+import model.{Game, GameInterface}
+import util.{Event, Observable, UndoManager}
+
 case class controll (game:GameInterface, file:FileIOInterface)extends ControllerInterface with Observable {
 
 
@@ -136,3 +140,11 @@ case class controll (game:GameInterface, file:FileIOInterface)extends Controller
   }
 
 }
+
+object controll:
+  def apply(kind:String):controll ={
+    kind match {
+      case "XML" => controll(Game("norm"), new FileIOXML)
+      case "JSON" => controll(Game("norm"), new FileIOJSON)
+    }
+  }

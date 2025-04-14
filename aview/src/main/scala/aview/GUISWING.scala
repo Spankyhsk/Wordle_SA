@@ -1,8 +1,13 @@
 package aview
 
+import controller.ControllerInterface
+import util.{Event, Observer}
+
 import java.awt.event.{ComponentAdapter, ComponentEvent}
 import java.awt.{BorderLayout, Color, Font, GridBagConstraints, GridBagLayout}
 import javax.swing.{ImageIcon, JPanel, JScrollPane, SwingUtilities}
+import scala.swing.*
+import scala.swing.event.{ButtonClicked, EditDone}
 
 
 class GUISWING(controll:ControllerInterface) extends Frame with Observer {

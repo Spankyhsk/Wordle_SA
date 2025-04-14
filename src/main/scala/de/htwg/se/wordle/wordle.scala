@@ -1,9 +1,9 @@
 package de.htwg.se.wordle
 
 
-import de.htwg.se.wordle.aview.{GUISWING, TUI}
 import com.google.inject.Guice
-import de.htwg.se.wordle.controller.ControllerInterface
+import aview.{GUISWING, TUI}
+import controller.ControllerInterface
 import scala.io.StdIn.readLine
 
 object wordle {

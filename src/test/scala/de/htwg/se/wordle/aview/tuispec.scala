@@ -1,10 +1,10 @@
-import de.htwg.se.wordle.aview.TUI
-import de.htwg.se.wordle.controller.ControllerInterface
-import de.htwg.se.wordle.util.{Event, Observable}
+import aview.TUI
+import controller.ControllerInterface
+import util.{Event, Observable}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import scala.util.control.Breaks._
 
+import scala.util.control.Breaks.*
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
 class TUISpec extends AnyWordSpec with Matchers {

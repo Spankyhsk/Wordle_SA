@@ -1,5 +1,9 @@
 package model
 
+import model.gamefieldComponent.{GamefieldInterface, gameboard}
+import model.gamemechComponent.{GameMech, gamemechInterface}
+import model.gamemodeComponnent.{GamemodeInterface, gamemode}
+
 case class Game(mech:gamemechInterface, board:GamefieldInterface[GamefieldInterface[String]],var mode:GamemodeInterface)extends GameInterface{
   def this() = this(new GameMech, new gameboard(), gamemode(1))
 
@@ -146,3 +150,10 @@ case class Game(mech:gamemechInterface, board:GamefieldInterface[GamefieldInterf
 
 
 }
+
+object Game:
+  def apply(kind:String)={
+    kind match{
+      case "norm" => new Game(new GameMech(), new gameboard() , gamemode(1))
+    }
+  }

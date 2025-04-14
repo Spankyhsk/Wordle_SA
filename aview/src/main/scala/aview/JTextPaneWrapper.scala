@@ -1,8 +1,9 @@
 package aview
 
-import java.awt._
+import java.awt.{Color, Font, Graphics, Graphics2D, GraphicsEnvironment}
 import java.io.{File, FileInputStream}
 import javax.imageio.ImageIO
+import scala.swing.*
 import javax.swing.{ImageIcon, JPanel, JTextPane, SwingUtilities}
 
 

@@ -1,8 +1,9 @@
 package de.htwg.se.wordle.model.gamemechComponent
 
-import de.htwg.se.wordle.model.gamemechComponent.GameMech
+import model.gamemechComponent.GameMech
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
 class gamemechspec extends AnyWordSpec with Matchers{
   // Mock-Implementierung der GuessStrategy
   class MockGuessStrategy extends GuessStrategy {
