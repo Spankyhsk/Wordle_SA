@@ -4,6 +4,14 @@ import sbt._
 val scala3Version = "3.3.1"
 val scalaFXVersion = "16.0.0-R24"
 
+lazy val model = project.in(file("model"))
+
+lazy val util = project.in(file("util"))
+
+lazy val controller = project.in(file("controller")).dependsOn(model, util)
+
+lazy val aview = project.in(file("aview")).dependsOn(controller, util)
+
 lazy val root = project
   .in(file("."))
   .settings(
@@ -31,3 +39,6 @@ lazy val root = project
     libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.3",
       libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "2.2.0"
   )
+  .aggregate(util, aview, controller, model)
+
+
