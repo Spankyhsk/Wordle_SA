@@ -1,6 +1,10 @@
 
 package controller
 
+import model.FileIOComponent.FileIOInterface
+import model.GameInterface
+import util.{Event, Observable, UndoManager}
+
 case class controll (game:GameInterface, file:FileIOInterface)extends ControllerInterface with Observable {
 
 

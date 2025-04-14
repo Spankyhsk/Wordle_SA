@@ -1,6 +1,7 @@
 package controller
 
-import de.htwg.se.wordle.util.Command
+import util.Command
+
 class SetCommand( key:Int, feedback: Map[Int, String], controller:controll)extends Command{
 
   override def doStep: Unit = {controller.gameboard.setR(1, key, feedback)}

@@ -1,6 +1,7 @@
 package model.FileIOComponent
 
-import de.htwg.se.wordle.model.GameInterface
+import model.GameInterface
+
 trait FileIOInterface {
   
   def load(game:GameInterface):String

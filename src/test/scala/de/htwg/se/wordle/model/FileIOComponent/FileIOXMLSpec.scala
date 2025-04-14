@@ -1,9 +1,10 @@
 package de.htwg.se.wordle.model.FileIOComponent
 
-import de.htwg.se.wordle.model.*
-import de.htwg.se.wordle.model.gamefieldComponent.{gameboard, gamefield}
-import de.htwg.se.wordle.model.gamemechComponent.GameMech
-import de.htwg.se.wordle.model.gamemodeComponnent.{GamemodeInterface, gamemode}
+
+import model.*
+import model.gamefieldComponent.{gameboard, gamefield}
+import model.gamemechComponent.GameMech
+import model.gamemodeComponnent.{GamemodeInterface, gamemode}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 

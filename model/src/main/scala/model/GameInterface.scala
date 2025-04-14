@@ -1,8 +1,10 @@
 package model
 
-import de.htwg.se.wordle.model.gamemechComponent.gamemechInterface
-import de.htwg.se.wordle.model.gamefieldComponent.GamefieldInterface
-import de.htwg.se.wordle.model.gamemodeComponnent.GamemodeInterface
+
+import model.gamemechComponent.gamemechInterface
+import model.gamemodeComponnent.GamemodeInterface
+import model.gamefieldComponent.GamefieldInterface
+
 trait GameInterface {
   
   //===================================================================

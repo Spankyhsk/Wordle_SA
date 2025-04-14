@@ -1,13 +1,12 @@
 package model.FileIOComponent
 
-import de.htwg.se.wordle.model.GameInterface
-import de.htwg.se.wordle.model.gamemechComponent.gamemechInterface
-import de.htwg.se.wordle.model.gamefieldComponent.GamefieldInterface
-import de.htwg.se.wordle.model.gamemodeComponnent.GamemodeInterface
+import model.GameInterface
+import model.gamemechComponent.gamemechInterface
+import model.gamefieldComponent.GamefieldInterface
+import model.gamemodeComponnent.GamemodeInterface
 
 import play.api.libs.json._
 import scala.io.Source
-import de.htwg.se.wordle.model.GameInterface
 
 class FileIOJSON extends FileIOInterface{
 

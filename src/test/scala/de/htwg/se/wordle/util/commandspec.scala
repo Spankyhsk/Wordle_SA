@@ -1,7 +1,7 @@
 package de.htwg.se.wordle.util
 
-import de.htwg.se.wordle.controller.controll
-import de.htwg.se.wordle.model.{Game, GameInterface}
+import controller.controll
+import model.{Game, GameInterface}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 

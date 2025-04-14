@@ -1,12 +1,11 @@
-import de.htwg.se.wordle.controller.controll
-import de.htwg.se.wordle.model.*
-import de.htwg.se.wordle.model.gamefieldComponent.{GamefieldInterface, gamefield}
-import de.htwg.se.wordle.model.gamemechComponent.gamemechInterface
-import de.htwg.se.wordle.model.gamemodeComponnent.GamemodeInterface
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
-import de.htwg.se.wordle.util.{Observer, Event} // Angenommen, diese Typen befinden sich im util-Paket
-
+import controller.controll
+import model.*
+import model.gamefieldComponent.{GamefieldInterface, gamefield}
+import model.gamemechComponent.gamemechInterface
+import model.gamemodeComponnent.GamemodeInterface
+import util.{Event, Observer}
 
 
 class ControllSpec extends AnyWordSpec with Matchers {
