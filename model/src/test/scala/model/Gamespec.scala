@@ -1,10 +1,10 @@
-package de.htwg.se.wordle.model
+package model
 
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.matchers.should.Matchers
-import model.gamemechComponent.*
 import model.gamefieldComponent.*
+import model.gamemechComponent.*
 import model.gamemodeComponnent.*
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 class Gamespec extends AnyWordSpec with Matchers {
 
@@ -68,7 +68,7 @@ class Gamespec extends AnyWordSpec with Matchers {
         val map:Map[Int, Boolean] = Map(1 -> true)
 
         game.setWinningboard(map)
-        game.mech.getWinningboard() should be(map)
+        game.mech.getWinningBoard() should be(map)
       }
 
       "setN upgrade number of attempt"in{

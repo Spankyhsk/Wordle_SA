@@ -1,7 +1,7 @@
-package de.htwg.se.wordle.model.gamemechComponent
+package model.gamemechComponent
 
-import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 class SimpleGuessStrategySpec extends AnyWordSpec with Matchers {
   "A SimpleGuessStrategy" when {

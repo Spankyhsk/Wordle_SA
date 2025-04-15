@@ -1,15 +1,14 @@
-package de.htwg.se.wordle.model.FileIOComponent
-
+package model.FileIOComponent
 
 import model.*
 import model.gamefieldComponent.{gameboard, gamefield}
 import model.gamemechComponent.GameMech
 import model.gamemodeComponnent.{GamemodeInterface, gamemode}
-import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-import scala.xml.{Node, XML}
 import java.io.{File, PrintWriter}
+import scala.xml.{Node, XML}
 
 class FileIOXMLSpec extends AnyWordSpec with Matchers {
 
@@ -85,7 +84,7 @@ class FileIOXMLSpec extends AnyWordSpec with Matchers {
       "correctly convert winningboard and anzahl to XML format" in {
         // Vorbereiten eines Spielmechanik-Objekts
         val mech = new GameMech()
-        mech.setWinningboard(Map(1 -> true))
+        mech.setWinningBoard(Map(1 -> true))
         mech.setN(3)
 
         val mechXML = fileIO.GameMechToXML(mech)
@@ -130,12 +129,12 @@ class FileIOXMLSpec extends AnyWordSpec with Matchers {
 
     // DummyGameMode implementiert nun GamemodeInterface
     class DummyGameMode(var limit: Int = 0, var targetWord: Map[Int, String] = Map()) extends GamemodeInterface {
-      override def setTargetWord(wordMap: Map[Int, String]): Unit = {
-        targetWord = wordMap
+      override def withTargetWord(wordMap: Map[Int, String]): GamemodeInterface = {
+        new DummyGameMode(targetWord = wordMap)
       }
 
-      override def setLimit(newLimit: Int): Unit = {
-        limit = newLimit
+      override def withLimit(newLimit: Int): GamemodeInterface = {
+        new DummyGameMode(limit = newLimit)
       }
 
       override def getTargetword(): Map[Int, String] = targetWord
@@ -155,8 +154,8 @@ class FileIOXMLSpec extends AnyWordSpec with Matchers {
       "correctly convert a game mode to XML format and back" in {
         val fileIO = new FileIOXML
         val mode = new DummyGameMode()
-        mode.setTargetWord(Map(1 -> "WORD1", 2 -> "WORD2"))
-        mode.setLimit(7)
+        mode.withTargetWord(Map(1 -> "WORD1", 2 -> "WORD2"))
+        mode.withLimit(7)
         val modeXML = fileIO.GamemodeTOXML(mode)
 
         // Überprüfen der konvertierten Zielwörter und des Limits
@@ -184,11 +183,11 @@ class FileIOXMLSpec extends AnyWordSpec with Matchers {
 
         // Erstellen eines Dummy-GameMech-Objekts und Setzen der Daten aus der XML
         val loadedMech = new GameMech()
-        loadedMech.setWinningboard((xmlData \ "winningboard" \ "entry").map(entry => (entry \@ "key").toInt -> (entry \@ "value").toBoolean).toMap)
+        loadedMech.setWinningBoard((xmlData \ "winningboard" \ "entry").map(entry => (entry \@ "key").toInt -> (entry \@ "value").toBoolean).toMap)
         loadedMech.setN((xmlData \ "anzahl").text.toInt)
 
         // Überprüfen der geladenen Daten
-        loadedMech.getWinningboard() should contain(1 -> true)
+        loadedMech.getWinningBoard() should contain(1 -> true)
         loadedMech.getN() should be(3)
       }
     }

@@ -1,11 +1,13 @@
-import aview.{BackgroundPanel, FieldPanel, JTextPaneWrapper, NEWSPanel, ResizableBannerPanel, TexturedBackground, TransparentButton, inputTextField}
+package aview
+
+import aview.*
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-import java.awt.{Color, Graphics2D, Image}
 import java.awt.image.{BufferedImage, ImageObserver}
-import javax.swing.{JPanel, JTextPane}
+import java.awt.{Color, Graphics2D, Image}
 import javax.swing.border.EmptyBorder
+import javax.swing.{JPanel, JTextPane}
 import scala.swing.{BorderPanel, Insets, Panel, Swing}
 
 class JTextPaneWrapperSpec extends AnyFlatSpec with Matchers {

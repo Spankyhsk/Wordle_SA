@@ -1,3 +1,7 @@
+package aview
+
+
+
 /*
 import com.google.inject.matcher.Matchers.returns
 import de.htwg.se.wordle.aview.{FieldPanel, GUISWING, JTextPaneWrapper, NEWSPanel, inputTextField}
