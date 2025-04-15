@@ -1,11 +1,14 @@
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.matchers.should.Matchers
-import controller.controll
+package controller
+
 import model.*
 import model.gamefieldComponent.{GamefieldInterface, gamefield}
 import model.gamemechComponent.gamemechInterface
 import model.gamemodeComponnent.GamemodeInterface
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import util.{Event, Observer}
+
+import scala.util.{Success, Try}
 
 
 class ControllSpec extends AnyWordSpec with Matchers {
@@ -29,13 +32,13 @@ class ControllSpec extends AnyWordSpec with Matchers {
     var gameOver = false
     var playerWon = false
 
-    override def count(limit: Int): Boolean = {
+    override def count(limit: Int): Option[Boolean] = {
       countCalled = true
-      if (gameOver) false else true
+      if (gameOver) Some(false) else Some(true)
     }
 
-    override def areYouWinningSon(): Boolean = {
-      playerWon
+    override def areYouWinningSon(): Option[Boolean] = {
+      Some(playerWon)
     }
 
     // Methoden, um Test-Szenarien zu setzen
@@ -48,23 +51,24 @@ class ControllSpec extends AnyWordSpec with Matchers {
     }
 
 
-    override def controllLength(n: Int, wordLength: Int): Boolean = {
+    override def controllLength(n: Int, wordLength: Int): Either[Boolean, Boolean] = {
       controllLengthCalled = true
-      true // Ändern Sie diesen Wert bei Bedarf
+      Right(true) // Ändern Sie diesen Wert bei Bedarf
     }
 
-    override def controllRealWord(guess: String): Boolean = {
+    override def controllRealWord(guess: String): Either[Boolean, Boolean] = {
       controllRealWordCalled = true
-      true // Ändern Sie diesen Wert bei Bedarf
+      Right(true) // Ändern Sie diesen Wert bei Bedarf
     }
 
-    override def buildwinningboard(n: Int, key: Int): Unit = {
+    override def buildWinningBoard(n: Int, key: Int): gamemechInterface = {
       buildWinningBoardCalled = true // Setze Flagge auf true, wenn Methode aufgerufen wird
+      this
     }
 
-    override def setWin(key: Int): Unit = {}
+    override def setWin(key: Int): gamemechInterface = {this}
 
-    override def getWin(key: Int): Boolean = false
+    override def getWinOption(key: Int): Option[Boolean] = Some(false)
 
 
 
@@ -73,13 +77,14 @@ class ControllSpec extends AnyWordSpec with Matchers {
       guess.toUpperCase
     }
 
-    override def compareTargetGuess(n: Int, targetWord: Map[Int, String], guess: String): Unit = {
+    override def compareTargetGuess(n: Int, targetWord: Map[Int, String], guess: String): gamemechInterface = {
       compareTargetGuessCalled = true
+      this
     }
 
-    override def evaluateGuess(targetWord: String, guess: String): String = {
+    override def evaluateGuess(targetWord: String, guess: String): Try[String] = {
       evaluateGuessCalled = true
-      "Feedback" // Ändern Sie diesen Wert bei Bedarf
+      Success("Feedback") // Ändern Sie diesen Wert bei Bedarf
     }
 
     override def getN(): Int = {
@@ -87,19 +92,23 @@ class ControllSpec extends AnyWordSpec with Matchers {
       0 // Ändern Sie diesen Wert bei Bedarf
     }
 
-    override def setN(zahl: Integer): Unit = {
+    override def setN(zahl: Integer): gamemechInterface = {
       setNCalled = true
+      this
     }
 
-    override def getWinningboard(): Map[Int, Boolean] = Map()
+    override def getWinningBoard(): Map[Int, Boolean] = Map()
 
-    override def setWinningboard(wBoard: Map[Int, Boolean]): Unit = {
+    override def setWinningBoard(wBoard: Map[Int, Boolean]): gamemechInterface = {
       setWinningBoardCalled = true
+      this
     }
 
-    override def resetWinningBoard(size: Int): Unit = {
+    override def resetWinningBoard(size: Int): gamemechInterface = {
       resetWinningBoardCalled = true
+      this
     }
+    
   }
 
   class StubGameField extends GamefieldInterface[GamefieldInterface[String]] {
@@ -124,7 +133,7 @@ class ControllSpec extends AnyWordSpec with Matchers {
       resetCalled = true
     }
 
-    override def setMap(boardmap: Map[Int, Map[Int, String]]): Unit = {}
+    override def setMap(boardmap: Map[Int, Map[Int, String]]): GamefieldInterface[GamefieldInterface[String]] = {this}
 
     override def toString: String = "Gamefield"
   }
@@ -143,9 +152,9 @@ class ControllSpec extends AnyWordSpec with Matchers {
 
     override def getWordList(): Array[String] = Array()
 
-    override def setTargetWord(targetWordMap: Map[Int, String]): Unit = {}
+    override def withTargetWord(targetWordMap: Map[Int, String]): GamemodeInterface = {this}
 
-    override def setLimit(Limit: Int): Unit = {}
+    override def withLimit(Limit: Int): GamemodeInterface = {this}
 
     override def toString(): String = "Gamemode"
   }

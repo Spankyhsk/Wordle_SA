@@ -1,5 +1,6 @@
-package de.htwg.se.wordle.model.gamemodeComponnent
+package model.gamemodeComponent
 
+import model.gamemodeComponnent._
 import org.scalatest.wordspec.AnyWordSpec
 
 class GamemodeSpec extends AnyWordSpec {
@@ -21,12 +22,12 @@ class GamemodeSpec extends AnyWordSpec {
     }
 
     "allow setting a new target word" in {
-      gamemode1Instance.setTargetWord(Map(1 -> "testWord"))
+      gamemode1Instance.withTargetWord(Map(1 -> "testWord"))
       assert(gamemode1Instance.getTargetword() == Map(1 -> "testWord"))
     }
 
     "allow setting a new limit" in {
-      gamemode1Instance.setLimit(10)
+      gamemode1Instance.withLimit(10)
       assert(gamemode1Instance.getLimit() == 10)
     }
     "correctly implement toString" in {
@@ -52,12 +53,12 @@ class GamemodeSpec extends AnyWordSpec {
     }
 
     "allow setting a new target word" in {
-      gamemode2Instance.setTargetWord(Map(1 -> "testWord1", 2 -> "testWord2"))
+      gamemode2Instance.withTargetWord(Map(1 -> "testWord1", 2 -> "testWord2"))
       assert(gamemode2Instance.getTargetword() == Map(1 -> "testWord1", 2 -> "testWord2"))
     }
 
     "allow setting a new limit" in {
-      gamemode2Instance.setLimit(9)
+      gamemode2Instance.withLimit(9)
       assert(gamemode2Instance.getLimit() == 9)
     }
     "correctly implement toString" in {
@@ -83,12 +84,12 @@ class GamemodeSpec extends AnyWordSpec {
     }
 
     "allow setting a new target word" in {
-      gamemode3Instance.setTargetWord(Map(1 -> "word1", 2 -> "word2", 3 -> "word3", 4 -> "word4"))
+      gamemode3Instance.withTargetWord(Map(1 -> "word1", 2 -> "word2", 3 -> "word3", 4 -> "word4"))
       assert(gamemode3Instance.getTargetword() == Map(1 -> "word1", 2 -> "word2", 3 -> "word3", 4 -> "word4"))
     }
 
     "allow setting a new limit" in {
-      gamemode3Instance.setLimit(11)
+      gamemode3Instance.withLimit(11)
       assert(gamemode3Instance.getLimit() == 11)
     }
     "correctly implement toString" in {

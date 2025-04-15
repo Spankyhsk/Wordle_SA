@@ -7,21 +7,33 @@ val scalaFXVersion = "16.0.0-R24"
 lazy val model = project.in(file("model"))
   .settings(
     scalaVersion := scala3Version,
+    libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.19",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test",
     libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.3",
     libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "2.2.0"
   )
 
 lazy val util = project.in(file("util"))
-  .settings(scalaVersion := scala3Version)
+  .settings(
+    scalaVersion := scala3Version,
+    libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.19",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test"
+  )
 
 lazy val controller = project.in(file("controller"))
-  .settings(scalaVersion := scala3Version)
+  .settings(
+    scalaVersion := scala3Version,
+    libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.19",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test"
+  )
   .dependsOn(model, util)
 
 lazy val aview = project.in(file("aview"))
   .settings(
     scalaVersion := scala3Version,
-    libraryDependencies += ("org.scala-lang.modules" %% "scala-swing" % "3.0.0").cross(CrossVersion.for3Use2_13)
+    libraryDependencies += ("org.scala-lang.modules" %% "scala-swing" % "3.0.0").cross(CrossVersion.for3Use2_13),
+    libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.19",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test"
   )
   .dependsOn(controller, util)
 
@@ -32,8 +44,8 @@ lazy val root = project
     version := "0.1.0-SNAPSHOT",
 
     scalaVersion := scala3Version,
-    libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.17",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.17" % "test",
+    libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.19",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test",
     libraryDependencies +="org.scalafx" %% "scalafx" % scalaFXVersion,
       libraryDependencies ++= {
           // Determine OS version of JavaFX binaries

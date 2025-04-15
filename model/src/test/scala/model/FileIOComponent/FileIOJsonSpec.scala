@@ -1,11 +1,11 @@
-package de.htwg.se.wordle.model.FileIOComponent
+package model.FileIOComponent
 
-import model.{Game, GameInterface}
 import model.gamefieldComponent.gameboard
 import model.gamemechComponent.GameMech
 import model.gamemodeComponnent.{gamemode, gamemode3}
-import org.scalatest.wordspec.AnyWordSpec
+import model.{Game, GameInterface}
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsObject, JsValue, Json}
 
 import java.io.{File, PrintWriter}
@@ -33,7 +33,7 @@ class FileIOJsonSpec extends AnyWordSpec with Matchers {
         val result: JsObject = file.gameToJson(game)
 
         // Überprüfen Sie, ob das erzeugte JSON den erwarteten Werten entspricht
-        (result \ "game" \ "mech" \ "winningboard").as[Map[Int, Boolean]] should be(game.getGamemech().getWinningboard())
+        (result \ "game" \ "mech" \ "winningboard").as[Map[Int, Boolean]] should be(game.getGamemech().getWinningBoard())
         (result \ "game" \ "mech" \ "Versuch").as[Int] should be(game.getGamemech().getN())
         (result \ "game" \ "board").as[JsObject] should be(file.gameboardToJason(game.getGamefield().getMap()))
         (result \ "game" \ "mode" \ "TargetWord").as[Map[Int, String]] should be(game.getGamemode().getTargetword())
@@ -459,7 +459,7 @@ class FileIOJsonSpec extends AnyWordSpec with Matchers {
         }
 
         fileIO.load(game)
-        game.getGamemech().getWinningboard() should contain allOf(1 -> true, 2 -> false)
+        game.getGamemech().getWinningBoard() should contain allOf(1 -> true, 2 -> false)
         game.getGamemech().getN() should be(3)
       }
     }

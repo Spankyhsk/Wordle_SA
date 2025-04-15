@@ -1,14 +1,13 @@
-package de.htwg.se.wordle.util
+package util
 
-import controller.controll
-import model.{Game, GameInterface}
-import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-class CommandSpec extends AnyWordSpec with Matchers {
+
+class commandspec extends AnyWordSpec with Matchers {
 
   // Mock-Implementierung für den Command-Trait
-  class TestCommand(controller: Option[controll]) extends Command {
+  class TestCommand() extends Command {
     var doStepCalled = false
     var undoStepCalled = false
 
@@ -19,9 +18,7 @@ class CommandSpec extends AnyWordSpec with Matchers {
   // Tests für den UndoManager
   "UndoManager" should {
     "correctly manage doStep and undoStep of a Command" in {
-      val mockGame = new Game(null, null, null)
-      val mockController = controll(mockGame, null)
-      val command = new TestCommand(Some(mockController))
+      val command = new TestCommand()
       val undoManager = new UndoManager()
 
       // Test doStep

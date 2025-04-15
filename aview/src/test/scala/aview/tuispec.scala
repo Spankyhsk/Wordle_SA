@@ -1,11 +1,13 @@
+package aview
+
 import aview.TUI
 import controller.ControllerInterface
-import util.{Event, Observable}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import util.{Event, Observable}
 
-import scala.util.control.Breaks.*
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+import scala.util.control.Breaks.*
 
 class TUISpec extends AnyWordSpec with Matchers {
 
