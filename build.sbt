@@ -6,6 +6,9 @@ val scalaFXVersion = "16.0.0-R24"
 
 ThisBuild / libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.19"
 ThisBuild / libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test"
+ThisBuild / libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.5.3"
+ThisBuild / libraryDependencies += "com.typesafe.akka" %% "akka-stream" % "2.8.8"
+
 
 lazy val rest = project.in(file("rest"))
   .settings(
