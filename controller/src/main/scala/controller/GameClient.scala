@@ -5,15 +5,33 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import model.gamefieldComponent.GamefieldInterface
+import model.gamefieldComponent.{GamefieldInterface, gameboard}
 import model.gamemechComponent.gamemechInterface
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, JsError, JsResult, JsValue, Json, OFormat}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 
 class GameClient(baseurl:String)(implicit system: ActorSystem, mat: ActorMaterializer, ec: ExecutionContext) {
 
+  implicit val gamefieldFormat: Format[GamefieldInterface[GamefieldInterface[String]]] = new Format[GamefieldInterface[GamefieldInterface[String]]] {
+    override def reads(json: JsValue): JsResult[GamefieldInterface[GamefieldInterface[String]]] = {
+      json.validate[Map[Int, Map[Int, String]]].map { boardMap =>
+        GamefieldFactory.createGameboard().setMap(boardMap)
+      }
+    }
+
+    override def writes(o: GamefieldInterface[GamefieldInterface[String]]): JsValue = {
+      val boardMap = o.getMap().map { case (key, gameField) =>
+        key -> gameField.getMap()
+      }
+      Json.toJson(boardMap)
+    }
+  }
+
+  private object GamefieldFactory {
+    def createGameboard(): GamefieldInterface[GamefieldInterface[String]] = new gameboard()
+  }
   
   
   def getGamemech(): Future[gamemechInterface] = {
@@ -81,7 +99,6 @@ class GameClient(baseurl:String)(implicit system: ActorSystem, mat: ActorMateria
     val url = s"$baseurl/setVersuche/$zahl"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
     // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Unit umgewandelt
-    // todo
     responseFuture.map(_ => ())
   }
 
@@ -146,18 +163,7 @@ class GameClient(baseurl:String)(implicit system: ActorSystem, mat: ActorMateria
   //-----------------------------------------------------------------------------
   //               //Mode
   //-----------------------------------------------------------------------------
-
-  def getGamemode(): Future[gamemechInterface] = {
-    val url = s"$baseurl/getGamemode"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein gamemechInterface umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { jsonString =>
-        Json.parse(jsonString).as[gamemechInterface]
-      }
-    }
-  }
-
+  
   def changeState(e: Int): Future[Unit] = {
     val url = s"$baseurl/changeState/$e"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
