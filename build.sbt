@@ -7,6 +7,16 @@ val scalaFXVersion = "16.0.0-R24"
 ThisBuild / libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.19"
 ThisBuild / libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test"
 
+lazy val rest = project.in(file("rest"))
+  .settings(
+    scalaVersion := scala3Version,
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-http" % "10.5.3",
+      "com.typesafe.akka" %% "akka-stream" % "2.8.8"
+    )
+  )
+  .dependsOn(controller, model, util, aview, root) // möglicherweise falsche Dependencies!
+
 lazy val model = project.in(file("model"))
   .settings(
     scalaVersion := scala3Version,
@@ -55,5 +65,4 @@ lazy val root = project
   )
   .dependsOn(aview, controller, util, model)
   .aggregate(util, aview, controller, model)
-
 
