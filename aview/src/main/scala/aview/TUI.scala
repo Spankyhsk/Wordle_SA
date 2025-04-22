@@ -6,8 +6,8 @@ import util.{Event, Observer}
 import scala.util.{Failure, Success, Try}
 
 
-class TUI (controller: ControllerInterface)extends Observer:
-  controller.add(this)
+class TUI (controllerClient: ControllerClient)extends Observer:
+  
   var newgame = true
 
   def getnewgame(): Boolean = {
@@ -16,9 +16,9 @@ class TUI (controller: ControllerInterface)extends Observer:
 
   def processInput(input: String): Unit = {
     if(newgame){
-      controller.changeState(difficultyLevel(input))
-      controller.createGameboard()
-      controller.createwinningboard()
+      controllerClient.patchChangeState(difficultyLevel(input))
+      controllerClient.putCreateGameboard()
+      controllerClient.putCreateWinningBoard()
     }else{
       scanInput(input)
     }
@@ -47,15 +47,15 @@ class TUI (controller: ControllerInterface)extends Observer:
         sys.exit(0)
       }
       case "$undo"=>{
-        controller.undo()
+        controllerClient.putUndoMove()
       }
       case "$save"=>{
         println("Spielstand wurde gespeichert")
-        controller.save()
+        controllerClient.postGameSave()
       }
       case "$load"=>{
         println("Spielstand wird geladen")
-        val message = controller.load()
+        val message = controllerClient.getGameSave().toString
         println(message)
       }
       case "$switch"=>{
