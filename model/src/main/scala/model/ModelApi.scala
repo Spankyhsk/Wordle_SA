@@ -95,7 +95,23 @@ object ModelApi extends App with JsonSupport {
           game.createGameboard()
           complete(StatusCodes.OK)
         }
+      },
+      path("fileIO" / "save") {
+      post {
+        complete {
+          fileIO.save(game)
+          "Spiel wurde gespeichert."
+        }
       }
+    },
+    path("fileIO" / "load") {
+      post {
+        complete {
+          val result = fileIO.load(game)
+          result
+        }
+      }
+    }
     )
   }
 
