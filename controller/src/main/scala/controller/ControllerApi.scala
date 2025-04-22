@@ -19,36 +19,60 @@ import util.{Event, Observer}
  */
 class ControllerApi(using var controller: ControllerInterface) extends Observer {
   // Registriert die API als Observer des Controllers
-  controller.add(this)
+  controller.add(this) //unsicher ob wir die API als Observer brauchen
 
-  
+
   /**
    * Definiert die HTTP-Routen für die API.
    *
    * - `GET /contoller/count`: Gibt zurück, ob das Spiel fortgesetzt werden kann.
-   *   Die Antwort ist ein JSON-Objekt mit einem `continue`-Feld, das einen Boolean-Wert enthält.
+   * Die Antwort ist ein JSON-Objekt mit einem `continue`-Feld, das einen Boolean-Wert enthält.
    */
   val route: Route =
-    pathPrefix("contoller") {
+  pathPrefix("contoller") {
+    concat(
       get {
         path("count") {
           val result = controller.count()
           complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("continue" -> result).toString()))
-        }
-      } ~
+        } ~
         path("getVersuche") {
-          get {
-            val result = controller.getVersuche()
-            complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("versuche" -> result).toString()))
-          }
+          val result = controller.getVersuche()
+          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("versuche" -> result).toString()))
         } ~
         path("getTargetword") {
-          get {
-            val result = controller.getTargetword()
-            complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("targetword" -> result).toString()))
-          }
+          val result = controller.getTargetword()
+          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.toJson(result).toString()))
+        } ~
+        path("toString") {
+          val result = controller.toString
+          complete(StatusCodes.OK, HttpEntity(ContentTypes.`text/plain(UTF-8)`, result))
         }
-    }
+      },
+      post {
+        path("evaluateGuess") {
+          entity(as[String]) { guess =>
+            val result = controller.evaluateGuess(guess)
+            complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.toJson(result).toString()))
+          }
+        } ~
+        path("areYouWinningSon") {
+          entity(as[String]) { guess =>
+            val result = controller.areYouWinningSon(guess)
+            complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("won" -> result).toString()))
+          }
+        } ~
+        path("changeState" / IntNumber) { state =>
+          controller.changeState(state)
+          complete(StatusCodes.OK, "State changed")
+        } ~
+        path("createGameboard") {
+          controller.createGameboard()
+          complete(StatusCodes.OK, "Gameboard created")
+        }
+      }
+    )
+  }
 
   /**
    * Wird aufgerufen, wenn der Controller ein Event auslöst.
