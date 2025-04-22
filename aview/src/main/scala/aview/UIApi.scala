@@ -3,24 +3,27 @@ package aview
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.server.Directives.*
 import play.api.libs.json.Json
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
 
-class UIApi()(implicit system: ActorSystem, materializer: ActorMaterializer, ec: ExecutionContext) {
+class UIApi(TUI:TUI, GUISWING: GUISWING)() {
 
-  val TUI = new TUI(new ControllerClient("http://localhost:8081"));
-  val GUI = new GUISWING();
+  implicit val system: ActorSystem = ActorSystem()
+  implicit val materializer: Materializer = Materializer(system)
+  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+
+  
 
   // Deine Route für den TUI-Endpunkt
   val routes: Route = {
     path("tui") {
       get {
-        complete("tui")
+        complete("Willkommen zu Wordle\nBefehle\n$quit := Spiel beenden, $save := Speichern, $load := Laden, $switch := Schwierigkeiten verändern")
       }
     }~
     path("tui"/ "processInput"/Segment){ input =>
@@ -34,6 +37,9 @@ class UIApi()(implicit system: ActorSystem, materializer: ActorMaterializer, ec:
         val result = TUI.getnewgame()
         complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("newGame" -> result).toString()))
       }
+    }
+    path("tui"/"Select"){
+      complete("Gamemode aussuchen: \n1:= leicht\n2:= mittel\n3:= schwer")
     }
   }
 

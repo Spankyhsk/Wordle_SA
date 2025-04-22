@@ -10,8 +10,7 @@ import scala.swing.*
 import scala.swing.event.{ButtonClicked, EditDone}
 
 
-class GUISWING(controll:ControllerInterface) extends Frame with Observer {
-  controll.add(this)
+class GUISWING(controllerClient: ControllerClient) extends Frame with Observer {
 
   // Fenster-Titel und Skalierbarkeit
   title = "Wordle"
@@ -43,17 +42,17 @@ class GUISWING(controll:ControllerInterface) extends Frame with Observer {
         }
       }
       case Event.NEW =>{
-        controll.setVersuche(1)
+        controllerClient.patchVersuche(1)
         inputTextField.enabled = true
         editDoneEventFired = true
       }
       case Event.WIN =>{
-        NEWSPanel.updateNewsBoardText(s"Gewonnen! Lösung: ${controll.TargetwordToString()}\n Zum erneuten Spielen Schwierigkeitsgrad aussuchen")
+        NEWSPanel.updateNewsBoardText(s"Gewonnen! Lösung: ${controllerClient.getTargetwordString()}\n Zum erneuten Spielen Schwierigkeitsgrad aussuchen")
         inputTextField.enabled = false
         editDoneEventFired = false
       }
       case Event.LOSE =>{
-        NEWSPanel.updateNewsBoardText(s"Verloren! Lösung:  ${controll.TargetwordToString()}\n Zum erneuten Spielen Schwierigkeitsgrad aussuchen")
+        NEWSPanel.updateNewsBoardText(s"Verloren! Lösung:  ${controllerClient.getTargetwordString()}\n Zum erneuten Spielen Schwierigkeitsgrad aussuchen")
         inputTextField.enabled = false
         editDoneEventFired = false
 
@@ -87,12 +86,12 @@ class GUISWING(controll:ControllerInterface) extends Frame with Observer {
         font = comicFont.deriveFont(12)
       }
       contents += new MenuItem(Action("Save") {
-        controll.save()
+        controllerClient.postGameSave()
       }) {
         font = comicFont.deriveFont(12)
       }
       contents += new MenuItem(Action("Load") {
-        controll.load()
+        controllerClient.getGameSave()
       }) {
         font = comicFont.deriveFont(12)
       }
@@ -285,15 +284,14 @@ class GUISWING(controll:ControllerInterface) extends Frame with Observer {
   listenTo(inputTextField, EasymodusButton, MediummodusButton, HardmodusButton)
   reactions += {
     case EditDone(inputTextField) =>
-      val guess = controll.GuessTransform(inputTextField.text)
-
-        if (controll.controllLength(guess.length) && controll.controllRealWord(guess)) {
-          if (!controll.areYouWinningSon(guess) && controll.count()) {
-            controll.set(controll.getVersuche(), controll.evaluateGuess(guess))
-            controll.setVersuche(controll.getVersuche() + 1)
-          } else {
-            controll.set(controll.getVersuche(), controll.evaluateGuess(guess))
-          }
+      val guess = controllerClient.getGuessTransform(inputTextField.text)
+      if (controllerClient.getControllLength(guess.length) && controllerClient.getControllRealWord(guess)) {
+        if (!controllerClient.getAreYouWinningSon(guess) && controllerClient.getCount()) {
+          controllerClient.putMove(controllerClient.getVersuche(), controllerClient.getEvaluateGuess(guess))
+          controllerClient.patchVersuche(controllerClient.getVersuche() + 1)
+        } else {
+          controllerClient.putMove(controllerClient.getVersuche(), controllerClient.getEvaluateGuess(guess))
+        }
         } else {
           NEWSPanel.updateNewsBoardText("Falsche Eingabe")
         }
@@ -304,23 +302,23 @@ class GUISWING(controll:ControllerInterface) extends Frame with Observer {
     case ButtonClicked(EasymodusButton) =>
 
       upgradegamemoduspanel(EasymodusButton)
-      controll.changeState(1)
-      controll.createGameboard()
-      controll.createwinningboard()
+      controllerClient.patchChangeState(1)
+      controllerClient.putCreateGameboard()
+      controllerClient.putCreateWinningBoard()
 
     case ButtonClicked(MediummodusButton) =>
 
       upgradegamemoduspanel(MediummodusButton)
-      controll.changeState(2)
-      controll.createGameboard()
-      controll.createwinningboard()
+      controllerClient.patchChangeState(2)
+      controllerClient.putCreateGameboard()
+      controllerClient.putCreateWinningBoard()
 
     case ButtonClicked(HardmodusButton) =>
 
       upgradegamemoduspanel(HardmodusButton)
-      controll.changeState(3)
-      controll.createGameboard()
-      controll.createwinningboard()
+      controllerClient.patchChangeState(3)
+      controllerClient.putCreateGameboard()
+      controllerClient.putCreateWinningBoard()
 
   }
 
@@ -366,7 +364,7 @@ class GUISWING(controll:ControllerInterface) extends Frame with Observer {
         val scrollPos = scrollPane.verticalScrollBar.value
 
         // Aktualisieren des OutputPanel
-        val currentGameState = controll.toString
+        val currentGameState = controllerClient.getGameBoard()
         FieldPanel.updateFieldPanel(currentGameState)
         OutputPanel.contents.clear()
         OutputPanel.contents += FieldPanel.GameFieldPanel()
