@@ -382,6 +382,6 @@ class GUISWING(controll:ControllerInterface) extends Frame with Observer {
       }
     })
   }
-
+  
 }
 
