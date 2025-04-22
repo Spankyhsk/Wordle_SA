@@ -6,8 +6,8 @@ import util.{Event, Observer}
 import scala.util.{Failure, Success, Try}
 
 
-class TUI (controller: ControllerInterface)extends Observer:
-  controller.add(this)
+class TUI (controllerClient: ControllerClient)extends Observer:
+  
   var newgame = true
 
   def getnewgame(): Boolean = {
@@ -16,9 +16,9 @@ class TUI (controller: ControllerInterface)extends Observer:
 
   def processInput(input: String): Unit = {
     if(newgame){
-      controller.changeState(difficultyLevel(input))
-      controller.createGameboard()
-      controller.createwinningboard()
+      controllerClient.patchChangeState(difficultyLevel(input))
+      controllerClient.putCreateGameboard()
+      controllerClient.putCreateWinningBoard()
     }else{
       scanInput(input)
     }
@@ -47,28 +47,28 @@ class TUI (controller: ControllerInterface)extends Observer:
         sys.exit(0)
       }
       case "$undo"=>{
-        controller.undo()
+        controllerClient.putUndoMove()
       }
       case "$save"=>{
         println("Spielstand wurde gespeichert")
-        controller.save()
+        controllerClient.postGameSave()
       }
       case "$load"=>{
         println("Spielstand wird geladen")
-        val message = controller.load()
+        val message = controllerClient.getGameSave().toString
         println(message)
       }
       case "$switch"=>{
         newgame = true
       }
       case default =>{
-        val guess = controller.GuessTransform(input)
-        if(controller.controllLength(guess.length) && controller.controllRealWord(guess)) {
-          if (!controller.areYouWinningSon(guess)&&controller.count()) {
-            controller.set(controller.getVersuche(), controller.evaluateGuess(guess))
-            controller.setVersuche(controller.getVersuche() + 1)
+        val guess = controllerClient.getGuessTransform(input)
+        if(controllerClient.getControllLength(guess.length) && controllerClient.getControllRealWord(guess)) {
+          if (!controllerClient.getAreYouWinningSon(guess)&& controllerClient.getCount()) {
+            controllerClient.putMove(controllerClient.getVersuche(), controllerClient.getEvaluateGuess(guess))
+            controllerClient.patchVersuche(controllerClient.getVersuche() + 1)
           }else{
-            controller.set(controller.getVersuche(), controller.evaluateGuess(guess))
+            controllerClient.putMove(controllerClient.getVersuche(), controllerClient.getEvaluateGuess(guess))
           }
         }else{
           println("Falsche Eingabe")
@@ -80,28 +80,28 @@ class TUI (controller: ControllerInterface)extends Observer:
   override def update(e:Event):Unit = {
     e match
       case Event.Move=> {
-        println(controller.toString)
+        println(controllerClient.getGameBoard())
         if(!newgame) {
           println("Dein Tipp: ")
         }
       }
       case Event.NEW=>{
-        controller.setVersuche(1)
+        controllerClient.patchVersuche(1)
         newgame = false
         println("Errate Wort:") //guess
       }
       case Event.UNDO=>{
-        controller.setVersuche(controller.getVersuche()-1)
-        println(controller.toString)
+        controllerClient.patchVersuche(controllerClient.getVersuche()-1)
+        println(controllerClient.getGameBoard())
         println("Dein Tipp: ")
       }
       case Event.WIN =>{
-        println(s"Du hast gewonnen! Lösung: "+ controller.TargetwordToString())
+        println(s"Du hast gewonnen! Lösung: "+ controllerClient.getTargetwordString())
         newgame = true
 
       }
       case Event.LOSE =>{
-        println(s"Verloren! Versuche aufgebraucht. Lösung: "+ controller.TargetwordToString())
+        println(s"Verloren! Versuche aufgebraucht. Lösung: "+ controllerClient.getTargetwordString())
         newgame = true
 
       }
