@@ -1,4 +1,4 @@
-package de.niklas.wordle.modelApi
+package model
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -9,26 +9,13 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import spray.json._
 import scala.io.StdIn
 
-import model.Game
 
-case class GameState(grid: Vector[String], guesses: Int, status: String)
-case class Guess(word: String)
-case class WinningBoardPayload(wBoard: Map[Int, Boolean])
-case class SetNPayload(n: Int)
+import model._
 
-trait JsonSupport extends DefaultJsonProtocol {
-  implicit val gameStateFormat = jsonFormat3(GameState)
-  implicit val guessFormat = jsonFormat1(Guess)
-  implicit val winningBoardFormat = jsonFormat1(WinningBoardPayload)
-  implicit val setNFormat = jsonFormat1(SetNPayload)
-}
-
-object ModelApi extends App with JsonSupport {
+class ModelApi(using var game: GameInterface){
   implicit val system = ActorSystem("wordle-api")
   implicit val materializer = Materializer(system)
   implicit val executionContext = system.dispatcher
-
-  val game = new Game()
 
   val route: Route = pathPrefix("model") {
     concat(
@@ -95,11 +82,27 @@ object ModelApi extends App with JsonSupport {
           game.createGameboard()
           complete(StatusCodes.OK)
         }
+      },
+      path("fileIO" / "save") {
+      post {
+        complete {
+          fileIO.save(game)
+          "Spiel wurde gespeichert."
+        }
       }
+    },
+    path("fileIO" / "load") {
+      post {
+        complete {
+          val result = fileIO.load(game)
+          result
+        }
+      }
+    }
     )
   }
 
-  val bindingFuture = Http().newServerAt("localhost", 8081).bind(route)
+  val bindingFuture = Http().newServerAt("localhost", 8082).bind(route)
   println(s"Server online at http://localhost:8081/\nPress RETURN to stop...")
   StdIn.readLine()
   bindingFuture.flatMap(_.unbind()).onComplete(_ => system.terminate())
