@@ -14,7 +14,7 @@ import model.Game
 import model.*
 import model.FileIOComponent.FileIOInterface
 
-class ModelApi(using var game: GameInterface, fileIO:FileIOInterface){
+class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
   
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(system)
@@ -56,14 +56,6 @@ class ModelApi(using var game: GameInterface, fileIO:FileIOInterface){
         put {
           game.createwinningboard()
           complete(StatusCodes.OK)
-        }
-      },
-      path("game" / "setWinningboard") {
-        post {
-          entity(as[WinningBoardPayload]) { payload =>
-            game.setWinningboard(payload.wBoard)
-            complete(StatusCodes.OK)
-          }
         }
       },
       path("game" / "setN" / IntNumber) { versuche =>

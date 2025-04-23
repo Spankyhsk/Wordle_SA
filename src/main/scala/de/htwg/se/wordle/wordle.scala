@@ -4,6 +4,9 @@ package de.htwg.se.wordle
 import com.google.inject.Guice
 import aview.{ControllerClient, GUISWING, TUI, UIApi}
 import controller.ControllerInterface
+import model.ModelApi
+import controller.ControllerApi
+import de.htwg.se.wordle.Default.{given}
 
 import scala.io.StdIn.readLine
 
@@ -15,7 +18,8 @@ object wordle {
     val gui = new GUISWING(new ControllerClient("http://localhost:8081"))
     
     UIApi(tui, gui)
-
+    ModelApi()
+    ControllerApi()
 
     println("Willkommen zu Wordle")
     println("Befehle")
