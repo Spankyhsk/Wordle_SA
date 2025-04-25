@@ -2,7 +2,7 @@ package controller
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
+import akka.http.scaladsl.model.{HttpMethods, HttpRequest, HttpResponse}
 import akka.stream.Materializer
 import play.api.libs.json.Json
 
@@ -15,24 +15,24 @@ class FileIOClient(baseurl:String)() {
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(system)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-  
-  def save():Unit ={
-    val url = s"$baseurl/fileIO/save"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
+
+  def save(): Unit = {
+    val url = s"$baseurl/save"
+    val request = HttpRequest(HttpMethods.PUT, uri = url) // PUT für die "save"-Aktion
+    Await.result(Http().singleRequest(request), 5.seconds) // Warte auf die Antwort, aber ignoriere sie
   }
-  
-  def load():String ={
-    val url = s"$baseurl/fileIO/load"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
 
-    // Blockiere auf das Future und warte auf die Antwort
-    val response = Await.result(responseFuture, 5.seconds)
+  def load(): String = {
+    val url = s"$baseurl/load"
+    val request = HttpRequest(HttpMethods.GET, uri = url) // GET für die "load"-Aktion
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
 
-    // Verarbeite die Antwort und extrahiere den "continue"-Boolean
-    val entityFuture = response.entity.toStrict(5.seconds)
-    val entity = Await.result(entityFuture, 5.seconds)
+    // Verarbeite die Antwort und extrahiere den "result"-String
+    val entityFuture = response.entity.toStrict(30.seconds)
+    val entity = Await.result(entityFuture, 30.seconds)
 
-    val jsonResponse = Json.parse(entity.data.utf8String) // JSON aus dem Body extrahieren
-    (jsonResponse \ "result").as[String] // Das "continue"-Feld extrahieren und zurückgeben
+    val jsonResponse = Json.parse(entity.data.utf8String)
+    (jsonResponse \ "result").as[String] // Das "result"-Feld extrahieren und zurückgeben
   }
+
 }

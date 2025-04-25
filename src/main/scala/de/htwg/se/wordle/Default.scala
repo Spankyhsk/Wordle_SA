@@ -4,7 +4,7 @@ import model.*
 import model.gamefieldComponent.{GamefieldInterface, gameboard}
 import model.gamemechComponent.{GameMech, gamemechInterface}
 import model.gamemodeComponnent.{GamemodeInterface, gamemode}
-import controller.{ControllerInterface, FileIOClient, GameClient, controll}
+import controller.{ControllerInterface, FileIOClient, GameClient, ObserverClient, controll}
 import com.google.inject.Guice
 import model.FileIOComponent.FileIOInterface
 import model.FileIOComponent.FileIOJSON
@@ -27,7 +27,7 @@ object Default:
   // Controller
 //  val injector = Guice.createInjector(new WordleModuleJson)
 //  given ControllerInterface = injector.getInstance(classOf[ControllerInterface])
-  given ControllerInterface = new controll(new GameClient("http://localhost:8082"), new FileIOClient("http://localhost:8082"))
+  given ControllerInterface = new controll(new GameClient("http://localhost:8082/game"), new FileIOClient("http://localhost:8082/fileIO"), new ObserverClient("http://localhost:8080/ui"))
 
   // Optional: Factory Methoden
   def createGame(): GameInterface = new Game(new GameMech(), new gameboard(), gamemode(1))

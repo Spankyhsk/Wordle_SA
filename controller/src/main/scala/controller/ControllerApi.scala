@@ -33,7 +33,7 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
    * Die Antwort ist ein JSON-Objekt mit einem `continue`-Feld, das einen Boolean-Wert enthält.
    */
   val routes: Route =
-  pathPrefix("contoller") {
+  pathPrefix("controller") {
     concat(
       get {
         path("getCount") {
@@ -68,7 +68,7 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
           val result = controller.load()
           complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("message" -> result).toString()))
         } ~
-        path("getGameBoard") { 
+        path("getGameBoard") {
           val result = controller.toString
           complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("gameboard" -> result).toString()))
         } ~
@@ -110,13 +110,14 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
           complete(StatusCodes.OK, "Versuche set")
         } ~
         path("patchChangeState" / IntNumber) { state =>
+          println("Schwirigkeit wurde gewechselt")
           controller.changeState(state)
           complete(StatusCodes.OK, "State changed")
         }
       }
     )
   }
-  
+
 
   /**
    * Wird aufgerufen, wenn der Controller ein Event auslöst.
