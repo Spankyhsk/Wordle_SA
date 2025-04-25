@@ -112,6 +112,19 @@ case class Game(mech:gamemechInterface, board:GamefieldInterface[GamefieldInterf
   def setMap(boardmap: Map[Int, Map[Int, String]]): Unit = {
     board.setMap(boardmap)
   }
+  
+  def setRGameboard(key:Int, feedback: Map[Int, String]):Unit={
+    board.setR(1 ,key , feedback)
+  }
+  
+  def undoStep(key:Int, feedback: Map[Int,String]):Unit={
+    setRGameboard(key,blankfeedback(feedback))
+  }
+
+  def blankfeedback(feedback: Map[Int, String]): Map[Int, String] = {
+    val updatefeedback: Map[Int, String] = feedback.map { case (key, _) => key -> "-" * getTargetword()(1).length }
+    updatefeedback
+  }
 
   //===========================================================================
 

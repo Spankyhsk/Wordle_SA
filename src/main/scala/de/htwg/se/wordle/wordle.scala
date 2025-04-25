@@ -12,12 +12,12 @@ import scala.io.StdIn.readLine
 
 object wordle {
   def main(args:Array[String]): Unit = {
-    val injector = Guice.createInjector(new WordleModuleJson)
-    val controll = injector.getInstance(classOf[ControllerInterface])
+//    val injector = Guice.createInjector(new WordleModuleJson)
+//    val controll = injector.getInstance(classOf[ControllerInterface])
     val tui = new TUI(new ControllerClient("http://localhost:8081"))
-    val gui = new GUISWING(new ControllerClient("http://localhost:8081"))
+//    val gui = new GUISWING(new ControllerClient("http://localhost:8081"))
     
-    UIApi(tui, gui)
+    UIApi()
     ModelApi()
     ControllerApi()
 

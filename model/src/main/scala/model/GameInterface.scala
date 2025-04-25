@@ -48,6 +48,10 @@ trait GameInterface {
   def toString(): String
   
   def setMap(boardmap:Map[Int, Map[Int, String]]):Unit
+
+  def setRGameboard(key:Int, feedback: Map[Int, String]):Unit
+
+  def undoStep(key:Int, feedback: Map[Int,String]):Unit
   
   //===================================================================
   

@@ -11,18 +11,20 @@ import play.api.libs.json.Json
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
 
-class UIApi(TUI:TUI, GUISWING: GUISWING)() {
+class UIApi()() {
 
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(system)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
-  
+  val TUI = new TUI(new ControllerClient("http://localhost:8081"))
+  val GUISWING = new GUISWING(new ControllerClient("http://localhost:8081"))
 
   // Deine Route für den TUI-Endpunkt
   val routes: Route = {
     path("tui") {
       get {
+        println("tui wurde UFGERUFEN")
         complete("Willkommen zu Wordle\nBefehle\n$quit := Spiel beenden, $save := Speichern, $load := Laden, $switch := Schwierigkeiten verändern")
       }
     }~
