@@ -93,7 +93,7 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
     )
   }
 
-  val bindingFuture = Http().newServerAt("localhost", 8082).bind(route)
-  println(s"Server online at http://localhost:8081/\nPress RETURN to stop...")
+  val bindingFuture = Http().newServerAt("localhost", 8083).bind(route)
+  println(s"Server online at http://localhost:8083/\nPress RETURN to stop...")
   bindingFuture.flatMap(_.unbind()).onComplete(_ => system.terminate())
 }

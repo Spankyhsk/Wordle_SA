@@ -1,5 +1,6 @@
 package controller
 
+import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.model.StatusCodes
@@ -112,6 +113,7 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
       }
     )
   }
+  
 
   /**
    * Wird aufgerufen, wenn der Controller ein Event auslöst.
@@ -120,4 +122,8 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
    * @param e Das ausgelöste Event.
    */
   override def update(e: Event): Unit = ???
+
+  val bindingFuture = Http().newServerAt("localhost", 8082).bind(route)
+  println(s"Server online at http://localhost:8082/\nPress RETURN to stop...")
+  bindingFuture.flatMap(_.unbind()).onComplete(_ => system.terminate())
 }
