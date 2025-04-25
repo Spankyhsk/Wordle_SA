@@ -17,12 +17,12 @@ class FileIOClient(baseurl:String)() {
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
   
   def save():Unit ={
-    val url = s"$baseurl/save"
+    val url = s"$baseurl/fileIO/save"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
   }
   
   def load():String ={
-    val url = s"$baseurl/load"
+    val url = s"$baseurl/fileIO/load"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
 
     // Blockiere auf das Future und warte auf die Antwort

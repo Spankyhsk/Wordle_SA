@@ -7,7 +7,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.server.Directives.*
 import play.api.libs.json.Json
-import util.Observer
+import util.{Event, Observer}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
@@ -22,6 +22,9 @@ import scala.util.{Failure, Success}
 class ControllerApi(using var controller: ControllerInterface) extends Observer {
   // Registriert die API als Observer des Controllers
 
+  implicit val system: ActorSystem = ActorSystem()
+  implicit val materializer: Materializer = Materializer(system)
+  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 //Note: getTargetword -> getTargetwordString
   /**
    * Definiert die HTTP-Routen für die API.
@@ -115,16 +118,16 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
   }
   
 
-//  /**
-//   * Wird aufgerufen, wenn der Controller ein Event auslöst.
-//   * Aktuell ist diese Methode noch nicht implementiert.
-//   *
-//   * @param e Das ausgelöste Event.
-//   */
-//  override def update(e: Event): Unit = ???
+  /**
+   * Wird aufgerufen, wenn der Controller ein Event auslöst.
+   * Aktuell ist diese Methode noch nicht implementiert.
+   *
+   * @param e Das ausgelöste Event.
+   */
+  override def update(e: Event): Unit = ???
 
   // Binde den Server an localhost:8080
-  val bindFuture = Http().newServerAt("localhost", 8082).bind(routes)
+  val bindFuture = Http().newServerAt("localhost", 8081).bind(routes)
 
   // Behandle das Future-Ergebnis von bind
   bindFuture.onComplete {

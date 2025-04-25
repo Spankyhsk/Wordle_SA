@@ -5,7 +5,7 @@ import model.FileIOComponent.{FileIOInterface, FileIOJSON, FileIOXML}
 import model.{Game, GameInterface}
 import util.{Event, Observable, UndoManager}
 
-case class controll (gameClient: GameClient, fileClient:FileIOClient)extends ControllerInterface with Observable {
+case class controll (gameClient:GameClient, fileClient:FileIOClient)extends ControllerInterface with Observable {
 
 
   //============================================================================
@@ -13,13 +13,20 @@ case class controll (gameClient: GameClient, fileClient:FileIOClient)extends Con
             //!!!GAME!!!
 
   //=============================================================================
+  def step(key:Int, feedback:Map[Int, String]):Unit={
+    gameClient.step(key, feedback)
+  }
+  
+  def undoStep(key:Int, feedback:Map[Int,String]):Unit={
+    gameClient.undoStep(key, feedback)
+  }
 
   //-----------------------------------------------------------------------------
 
           //mech
 
   //-----------------------------------------------------------------------------
-  
+
   def count(): Boolean = {
     val continue = gameClient.count()
     if (!continue) {
@@ -91,7 +98,7 @@ case class controll (gameClient: GameClient, fileClient:FileIOClient)extends Con
     gameClient.changeState(e)
     notifyObservers(Event.NEW)
   }
-  
+
 
   def TargetwordToString():String ={
     gameClient.targetWordToString()

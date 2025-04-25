@@ -18,7 +18,7 @@ class ControllerClient(baseurl:String)() {
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
   
   def getCount():Boolean={
-    val url = s"$baseurl/getCount"
+    val url = s"$baseurl/contoller/getCount"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
 
     // Blockiere auf das Future und warte auf die Antwort
@@ -33,7 +33,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def getGuessTransform(input:String):String={
-    val url = s"$baseurl/getGuessTransform"
+    val url = s"$baseurl/contoller/getGuessTransform"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
 
     // Blockiere auf das Future und warte auf die Antwort
@@ -48,7 +48,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def getControllLength(length:Int):Boolean={
-    val url = s"$baseurl/getControllLength/$length"
+    val url = s"$baseurl/contoller/getControllLength/$length"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
 
     // Blockiere auf das Future und warte auf die Antwort
@@ -63,7 +63,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def getControllRealWord(guess:String):Boolean={
-    val url = s"$baseurl/getControllRealWord/$guess"
+    val url = s"$baseurl/contoller/getControllRealWord/$guess"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
 
     // Blockiere auf das Future und warte auf die Antwort
@@ -78,7 +78,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def getAreYouWinningSon(guess:String):Boolean={
-    val url = s"$baseurl/getAreYouWinningSon/$guess"
+    val url = s"$baseurl/contoller/getAreYouWinningSon/$guess"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
 
     // Blockiere auf das Future und warte auf die Antwort
@@ -93,7 +93,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def getVersuche():Int={
-    val url = s"$baseurl/getVersuche"
+    val url = s"$baseurl/contoller/getVersuche"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
 
     // Blockiere auf das Future und warte auf die Antwort
@@ -108,7 +108,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def getEvaluateGuess(guess:String):Map[Int, String]={
-    val url = s"$baseurl/getEvaluateGuess/$guess" // URL von Microservice B
+    val url = s"$baseurl/contoller/getEvaluateGuess/$guess" // URL von Microservice B
 
     // HTTP-Request an Microservice B
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
@@ -126,41 +126,41 @@ class ControllerClient(baseurl:String)() {
   }
 
   def putMove(versuche:Int, feedback:Map[Int, String]):Unit={
-    val url = s"$baseurl/putMove"
+    val url = s"$baseurl/contoller/putMove/$versuche"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
   }
 
   def patchVersuche(versuche:Int):Unit={
-    val url = s"$baseurl/patchVersuche/$versuche"
+    val url = s"$baseurl/contoller/patchVersuche/$versuche"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
   }
 
   def patchChangeState(level:Int):Unit={
-    val url = s"$baseurl/patchChangeState/$level"
+    val url = s"$baseurl/contoller/patchChangeState/$level"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
   }
 
   def putCreateGameboard():Unit={
-    val url = s"$baseurl/putCreateGameboard"
+    val url = s"$baseurl/contoller/putCreateGameboard"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
   }
   def putCreateWinningBoard():Unit={
-    val url = s"$baseurl/putCreateWinningBoard"
+    val url = s"$baseurl/contoller/putCreateWinningBoard"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
   }
 
   def putUndoMove():Unit={
-    val url = s"$baseurl/putUndoMove"
+    val url = s"$baseurl/contoller/putUndoMove"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
   }
 
   def postGameSave():Unit={
-    val url = s"$baseurl/postGameSave"
+    val url = s"$baseurl/contoller/postGameSave"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
   }
 
   def getGameSave():String={
-    val url = s"$baseurl/getGameSave"
+    val url = s"$baseurl/contoller/getGameSave"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
 
     // Blockiere auf das Future und warte auf die Antwort
@@ -175,7 +175,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def getGameBoard():String={
-    val url = s"$baseurl/getGameBoard"
+    val url = s"$baseurl/contoller/getGameBoard"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
 
     // Blockiere auf das Future und warte auf die Antwort
@@ -190,7 +190,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def getTargetwordString():String={
-    val url = s"$baseurl/getTargetWordString"
+    val url = s"$baseurl/contoller/getTargetWordString"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
 
     // Blockiere auf das Future und warte auf die Antwort

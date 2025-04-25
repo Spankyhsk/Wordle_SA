@@ -6,15 +6,15 @@ import controller.controll
 import controller.ControllerInterface
 
 
-class WordleModuleXML extends AbstractModule with ScalaModule {
-  override def configure():Unit= {
-    bind[ControllerInterface].toInstance(controll("XML"))
-  }
-
-}
-
-class WordleModuleJson extends AbstractModule with ScalaModule{
-  override def configure():Unit={
-    bind[ControllerInterface].toInstance(controll("JSON"))
-  }
-}
+//class WordleModuleXML extends AbstractModule with ScalaModule {
+//  override def configure():Unit= {
+//    bind[ControllerInterface].toInstance(controll("XML"))
+//  }
+//
+//}
+//
+//class WordleModuleJson extends AbstractModule with ScalaModule{
+//  override def configure():Unit={
+//    bind[ControllerInterface].toInstance(controll("JSON"))
+//  }
+//}
