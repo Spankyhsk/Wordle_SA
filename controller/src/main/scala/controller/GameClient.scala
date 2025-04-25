@@ -33,14 +33,6 @@ class GameClient(baseurl:String)(implicit system: ActorSystem, mat: ActorMateria
     def createGameboard(): GamefieldInterface[GamefieldInterface[String]] = new gameboard()
   }
   
-  
-  def getGamemech(): Future[gamemechInterface] = {
-    val url = s"$baseurl/gamemech"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein gamemechInterface umgewandelt
-    // todo
-    ???
-  }
 
   def count(): Future[Boolean] = {
     val url = s"$baseurl/count"
