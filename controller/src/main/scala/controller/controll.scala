@@ -5,7 +5,7 @@ import model.FileIOComponent.{FileIOInterface, FileIOJSON, FileIOXML}
 import model.{Game, GameInterface}
 import util.{Event, Observable, UndoManager}
 
-case class controll (game:GameInterface, file:FileIOInterface)extends ControllerInterface with Observable {
+case class controll (gameClient: GameClient, fileClient:FileIOClient)extends ControllerInterface with Observable {
 
 
   //============================================================================
@@ -19,11 +19,9 @@ case class controll (game:GameInterface, file:FileIOInterface)extends Controller
           //mech
 
   //-----------------------------------------------------------------------------
-
-  val gamemech = game.getGamemech()
-
+  
   def count(): Boolean = {
-    val continue = game.count()
+    val continue = gameClient.count()
     if (!continue) {
       notifyObservers(Event.LOSE)
     }
@@ -31,31 +29,31 @@ case class controll (game:GameInterface, file:FileIOInterface)extends Controller
   }
 
   def controllLength(n: Int): Boolean = {
-    game.controllLength(n)
+    gameClient.controllLength(n)
   }
 
   def controllRealWord(guess: String): Boolean = {
-    game.controllRealWord(guess)
+    gameClient.controllRealWord(guess)
   }
 
   def evaluateGuess(guess: String): Map[Int, String] = {
-    game.evaluateGuess(guess)
+    gameClient.evaluateGuess(guess)
   }
 
   def GuessTransform(guess: String): String = {
-    game.GuessTransform(guess)
+    gameClient.guessTransform(guess)
   }
 
   def setVersuche(zahl: Integer): Unit = {
-    game.setN(zahl)
+    gameClient.setVersuche(zahl)
   }
 
   def getVersuche(): Int = {
-    game.getN()
+    gameClient.getVersuche()
   }
 
   def areYouWinningSon(guess: String): Boolean = {
-    val won = game.areYouWinningSon(guess)
+    val won = gameClient.areYouWinningSon(guess)
     if (won) {
       notifyObservers(Event.WIN)
     }
@@ -63,7 +61,7 @@ case class controll (game:GameInterface, file:FileIOInterface)extends Controller
   }
 
   def createwinningboard(): Unit = {
-    game.createwinningboard()
+    gameClient.createWinningBoard()
     notifyObservers(Event.Move)
   }
 
@@ -73,14 +71,13 @@ case class controll (game:GameInterface, file:FileIOInterface)extends Controller
 
   //----------------------------------------------------------------------------
 
-  val gameboard = game.getGamefield()
 
   def createGameboard(): Unit = {
-    game.createGameboard()
+    gameClient.createGameboard()
   }
 
   override def toString: String = {
-    game.toString
+    gameClient.gameToString
   }
 
   //----------------------------------------------------------------------------
@@ -89,19 +86,15 @@ case class controll (game:GameInterface, file:FileIOInterface)extends Controller
 
   //----------------------------------------------------------------------------
 
-  var gamemode = game.getGamemode()
 
   def changeState(e: Int): Unit = {
-    game.changeState(e)
+    gameClient.changeState(e)
     notifyObservers(Event.NEW)
   }
-
-  def getTargetword(): Map[Int, String] = {
-    game.getTargetword()
-  }
+  
 
   def TargetwordToString():String ={
-    game.TargetwordToString()
+    gameClient.targetWordToString()
   }
 
   //=============================================================================
@@ -129,22 +122,22 @@ case class controll (game:GameInterface, file:FileIOInterface)extends Controller
   //=============================================================================
 
   def save():Unit={
-    file.save(game)
+    fileClient.save()
     notifyObservers(Event.Move)
   }
 
   def load():String={
-    val message = file.load(game)
+    val message = fileClient.load()
     notifyObservers(Event.Move)
     message
   }
 
 }
 
-object controll:
-  def apply(kind:String):controll ={
-    kind match {
-      case "XML" => controll(Game("norm"), new FileIOXML)
-      case "JSON" => controll(Game("norm"), new FileIOJSON)
-    }
-  }
+//object controll:
+//  def apply(kind:String):controll ={
+//    kind match {
+//      case "XML" => controll(Game("norm"), new FileIOXML)
+//      case "JSON" => controll(Game("norm"), new FileIOJSON)
+//    }
+//  }

@@ -4,16 +4,22 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorMaterializer, Materializer}
+import model.GameInterface
 import model.gamefieldComponent.{GamefieldInterface, gameboard}
 import model.gamemechComponent.gamemechInterface
 import play.api.libs.json.{Format, JsError, JsResult, JsValue, Json, OFormat}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.*
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 
 
-class GameClient(baseurl:String)(implicit system: ActorSystem, mat: ActorMaterializer, ec: ExecutionContext) {
+class GameClient(baseurl:String)() {
 
+  implicit val system: ActorSystem = ActorSystem()
+  implicit val materializer: Materializer = Materializer(system)
+  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+  
   implicit val gamefieldFormat: Format[GamefieldInterface[GamefieldInterface[String]]] = new Format[GamefieldInterface[GamefieldInterface[String]]] {
     override def reads(json: JsValue): JsResult[GamefieldInterface[GamefieldInterface[String]]] = {
       json.validate[Map[Int, Map[Int, String]]].map { boardMap =>
@@ -33,92 +39,122 @@ class GameClient(baseurl:String)(implicit system: ActorSystem, mat: ActorMateria
     def createGameboard(): GamefieldInterface[GamefieldInterface[String]] = new gameboard()
   }
   
-
-  def count(): Future[Boolean] = {
+  
+  def count(): Boolean = {
     val url = s"$baseurl/count"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Boolean umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { jsonString =>
-        (Json.parse(jsonString) \ "continue").as[Boolean]
-      }
-    }
+
+    // Blockiere auf das Future und warte auf die Antwort
+    val response = Await.result(responseFuture, 5.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "continue"-Boolean
+    val entityFuture = response.entity.toStrict(5.seconds)
+    val entity = Await.result(entityFuture, 5.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String) // JSON aus dem Body extrahieren
+    (jsonResponse \ "continue").as[Boolean] // Das "continue"-Feld extrahieren und zurückgeben
   }
 
-  def controllLength(n: Int): Future[Boolean] = {
+  def controllLength(n: Int): Boolean = {
     val url = s"$baseurl/controllLength/$n"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Boolean umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { jsonString =>
-        (Json.parse(jsonString) \ "result").as[Boolean]
-      }
-    }
+
+    // Blockiere auf das Future und warte auf die Antwort
+    val response = Await.result(responseFuture, 5.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "continue"-Boolean
+    val entityFuture = response.entity.toStrict(5.seconds)
+    val entity = Await.result(entityFuture, 5.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String) // JSON aus dem Body extrahieren
+    (jsonResponse \ "result").as[Boolean] // Das "continue"-Feld extrahieren und zurückgeben
   }
 
-  def controllRealWord(guess: String): Future[Boolean] = {
+  def controllRealWord(guess: String): Boolean = {
     val url = s"$baseurl/controllRealWord/$guess"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Boolean umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { jsonString =>
-        (Json.parse(jsonString) \ "result").as[Boolean]
-      }
-    }
+
+    // Blockiere auf das Future und warte auf die Antwort
+    val response = Await.result(responseFuture, 5.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "continue"-Boolean
+    val entityFuture = response.entity.toStrict(5.seconds)
+    val entity = Await.result(entityFuture, 5.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String) // JSON aus dem Body extrahieren
+    (jsonResponse \ "result").as[Boolean] // Das "continue"-Feld extrahieren und zurückgeben
   }
 
-  def evaluateGuess(guess: String): Future[Map[Int, String]] = {
+  def evaluateGuess(guess: String): Map[Int, String] = {
     val url = s"$baseurl/evaluateGuess/$guess"
+    // HTTP-Request an Microservice B
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Map[Int, String] umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { jsonString =>
-        Json.parse(jsonString).as[Map[Int, String]]
-      }
-    }
+
+    // Blockiere auf das Future und warte auf die Antwort
+    val response = Await.result(responseFuture, 5.seconds)
+
+    // Antwort verarbeiten
+    val entityFuture = response.entity.toStrict(5.seconds)
+    val entity = Await.result(entityFuture, 5.seconds)
+
+    // JSON parsen und als Map[Int, String] zurückgeben
+    val jsonResponse = Json.parse(entity.data.utf8String) // JSON parsen
+    (jsonResponse.as[Map[Int, String]]) // Map extrahieren und zurückgeben
   }
 
-  def guessTransform(guess: String): Future[String] = {
+  def guessTransform(guess: String): String = {
     val url = s"$baseurl/GuessTransform/$guess"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein String umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String]
-    }
+
+    // Blockiere auf das Future und warte auf die Antwort
+    val response = Await.result(responseFuture, 5.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "continue"-Boolean
+    val entityFuture = response.entity.toStrict(5.seconds)
+    val entity = Await.result(entityFuture, 5.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String) // JSON aus dem Body extrahieren
+    (jsonResponse \ "transformedGuess").as[String] // Das "continue"-Feld extrahieren und zurückgeben
   }
 
-  def setVersuche(zahl: Integer): Future[Unit] = {
+  def setVersuche(zahl: Integer): Unit = {
     val url = s"$baseurl/setVersuche/$zahl"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Unit umgewandelt
-    responseFuture.map(_ => ())
   }
 
-  def getVersuche(): Future[Int] = {
+  def getVersuche(): Int = {
     val url = s"$baseurl/getVersuche"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Int umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map(_.toInt)
-    }
+
+    // Blockiere auf das Future und warte auf die Antwort
+    val response = Await.result(responseFuture, 5.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "continue"-Boolean
+    val entityFuture = response.entity.toStrict(5.seconds)
+    val entity = Await.result(entityFuture, 5.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String) // JSON aus dem Body extrahieren
+    (jsonResponse \ "versuche").as[Int] // Das "continue"-Feld extrahieren und zurückgeben
   }
 
-  def areYouWinningSon(guess: String): Future[Boolean] = {
+  def areYouWinningSon(guess: String): Boolean = {
     val url = s"$baseurl/areYouWinningSon/$guess"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Boolean umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { jsonString =>
-        (Json.parse(jsonString) \ "result").as[Boolean]
-      }
-    }
+
+    // Blockiere auf das Future und warte auf die Antwort
+    val response = Await.result(responseFuture, 5.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "continue"-Boolean
+    val entityFuture = response.entity.toStrict(5.seconds)
+    val entity = Await.result(entityFuture, 5.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String) // JSON aus dem Body extrahieren
+    (jsonResponse \ "won").as[Boolean] // Das "continue"-Feld extrahieren und zurückgeben
   }
 
-  def createWinningBoard(): Future[Unit] = {
+  def createWinningBoard(): Unit = {
     val url = s"$baseurl/createwinningboard"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Unit umgewandelt
-    responseFuture.map(_ => ())
   }
 
   //-----------------------------------------------------------------------------
@@ -136,51 +172,49 @@ class GameClient(baseurl:String)(implicit system: ActorSystem, mat: ActorMateria
     }
   }
 
-  def createGameboard(): Future[Unit] = {
+  def createGameboard(): Unit = {
     val url = s"$baseurl/createGameboard"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Unit umgewandelt
-    responseFuture.map(_ => ())
   }
 
-  def gameToString: Future[String] = {
+  def gameToString: String = {
     val url = s"$baseurl/toString"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein String umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String]
-    }
+
+    // Blockiere auf das Future und warte auf die Antwort
+    val response = Await.result(responseFuture, 5.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "continue"-Boolean
+    val entityFuture = response.entity.toStrict(5.seconds)
+    val entity = Await.result(entityFuture, 5.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String) // JSON aus dem Body extrahieren
+    (jsonResponse \ "gameboard").as[String] // Das "continue"-Feld extrahieren und zurückgeben
   }
 
   //-----------------------------------------------------------------------------
   //               //Mode
   //-----------------------------------------------------------------------------
   
-  def changeState(e: Int): Future[Unit] = {
+  def changeState(e: Int): Unit = {
     val url = s"$baseurl/changeState/$e"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
     // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Unit umgewandelt
-    responseFuture.map(_ => ())
   }
 
-  def getTargetword(): Future[Map[Int, String]] = {
-    val url = s"$baseurl/getTargetword"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Map[Int, String] umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { jsonString =>
-        Json.parse(jsonString).as[Map[Int, String]]
-      }
-    }
-  }
-
-  def targetWordToString(): Future[String] = {
+  def targetWordToString(): String = {
     val url = s"$baseurl/TargetwordToString"
     val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein String umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String]
-    }
+
+    // Blockiere auf das Future und warte auf die Antwort
+    val response = Await.result(responseFuture, 5.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "continue"-Boolean
+    val entityFuture = response.entity.toStrict(5.seconds)
+    val entity = Await.result(entityFuture, 5.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String) // JSON aus dem Body extrahieren
+    (jsonResponse \ "targetWord").as[String] // Das "continue"-Feld extrahieren und zurückgeben
   }
 
 }
