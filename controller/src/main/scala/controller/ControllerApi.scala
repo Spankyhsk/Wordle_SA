@@ -36,6 +36,9 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
   pathPrefix("controller") {
     concat(
       get {
+        path("testAPI") {
+          complete("API is working")
+        } ~
         path("getCount") {
           val result = controller.count()
           complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("continue" -> result).toString()))
@@ -133,7 +136,7 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
   // Behandle das Future-Ergebnis von bind
   bindFuture.onComplete {
     case Success(binding) =>
-      println(s"Server läuft auf ${binding.localAddress}")
+      println(s"Controller Server läuft auf ${binding.localAddress}")
     case Failure(ex) =>
       println(s"Fehler beim Starten des Servers: $ex")
   }

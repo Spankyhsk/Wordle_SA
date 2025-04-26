@@ -38,7 +38,7 @@ class UIApi()() extends Observable{
         path("tui" / "processInput" / Segment) { input =>
           put {
             TUI.processInput(input)
-            complete(StatusCodes.OK)
+            complete(StatusCodes.OK, s"Input verarbeitet: $input")
           }
         },
 
@@ -78,7 +78,7 @@ class UIApi()() extends Observable{
   // Behandle das Future-Ergebnis von bind
   bindFuture.onComplete {
     case Success(binding) =>
-      println(s"Server lauuft auf ${binding.localAddress}")
+      println(s"UI Server läuft auf ${binding.localAddress}")
     case Failure(ex) =>
       println(s"Fehler beim Starten des Servers: $ex")
   }
