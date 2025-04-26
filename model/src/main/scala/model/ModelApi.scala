@@ -2,46 +2,54 @@ package model
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives._
-import akka.stream.Materializer
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
-import spray.json._
-import scala.io.StdIn
+import akka.http.scaladsl.server.Route
+import akka.stream.{ActorMaterializer, Materializer}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
+import akka.http.scaladsl.server.Directives.*
+import play.api.libs.json.Json
 
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
+import scala.util.{Failure, Success}
+import model.Game
+import model.*
+import model.FileIOComponent.FileIOInterface
 
-import model._
-
-class ModelApi(using var game: GameInterface){
-  implicit val system = ActorSystem("wordle-api")
-  implicit val materializer = Materializer(system)
-  implicit val executionContext = system.dispatcher
+class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
+  
+  implicit val system: ActorSystem = ActorSystem()
+  implicit val materializer: Materializer = Materializer(system)
+  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
   val route: Route = pathPrefix("model") {
     concat(
       path("game" / "count") {
         get {
-          complete(game.count())
+          val result = game.count()
+          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("continue" -> result).toString()))
         }
       },
       path("game" / "controllLength") {
         parameter("n".as[Int]) { n =>
-          complete(game.controllLength(n))
+          val result = game.controllLength(n)
+          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
         }
       },
       path("game" / "controllRealWord") {
         parameter("guess") { guess =>
-          complete(game.controllRealWord(guess))
+          val result = game.controllRealWord(guess)
+          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
         }
       },
       path("game" / "evaluateGuess") {
         parameter("guess") { guess =>
-          complete(game.evaluateGuess(guess))
+          val result = game.evaluateGuess(guess)
+          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
         }
       },
       path("game" / "areYouWinningSon") {
         parameter("guess") { guess =>
-          complete(game.areYouWinningSon(guess))
+          val result = game.areYouWinningSon(guess)
+          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("won" -> result).toString()))
         }
       },
       path("game" / "createwinningboard") {
@@ -50,31 +58,22 @@ class ModelApi(using var game: GameInterface){
           complete(StatusCodes.OK)
         }
       },
-      path("game" / "setWinningboard") {
+      path("game" / "setN" / IntNumber) { versuche =>
         post {
-          entity(as[WinningBoardPayload]) { payload =>
-            game.setWinningboard(payload.wBoard)
+            game.setN(versuche)
             complete(StatusCodes.OK)
           }
-        }
-      },
-      path("game" / "setN") {
-        post {
-          entity(as[SetNPayload]) { payload =>
-            game.setN(payload.n)
-            complete(StatusCodes.OK)
-          }
-        }
-      },
+        },
       path("game" / "getN") {
         get {
-          complete(game.getN())
+          val result = game.getN();
+          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
         }
       },
-      path("game" / "resetGameboard") {
-        put {
-          game.resetGameboard()
-          complete(StatusCodes.OK)
+      path("game"/ "GuessTransform"/ Segment){ guess =>
+        get {
+          val result = game.GuessTransform(guess)
+          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("transformedGuess" -> result).toString()))
         }
       },
       path("game" / "createGameboard") {
@@ -83,27 +82,61 @@ class ModelApi(using var game: GameInterface){
           complete(StatusCodes.OK)
         }
       },
+      path("game" / "toString"){
+        get {
+          val result = game.toString
+          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("gameboard" -> result).toString()))
+        }
+      },
+      path("game" / "changeState" / IntNumber){ level =>
+        patch{
+          game.changeState(level)
+          complete(StatusCodes.OK)
+        }
+      },
+      path("game" / "TargetwordToString"){
+        get {
+          val result = game.TargetwordToString()
+          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("targetWord" -> result).toString()))
+        }
+      },
       path("fileIO" / "save") {
       post {
+        fileIO.save(game)
         complete {
-          fileIO.save(game)
           "Spiel wurde gespeichert."
         }
       }
     },
     path("fileIO" / "load") {
       post {
-        complete {
-          val result = fileIO.load(game)
-          result
+        val result = fileIO.load(game)
+        complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
+      }
+    },
+      path("game"/"step"/IntNumber) { key =>
+        post {
+          entity(as[String]) { body =>
+            val json = Json.parse(body)
+            val receivedMap = json.as[Map[Int, String]]
+            game.setRGameboard(key, receivedMap)
+            complete(StatusCodes.OK)
+          }
+        }
+      },
+      path("game"/"undoStep"/IntNumber) { key =>
+        post {
+          entity(as[String]) { body =>
+            val json = Json.parse(body)
+            val receivedMap = json.as[Map[Int, String]]
+            game.undoStep(key, receivedMap)
+            complete(StatusCodes.OK)
+          }
         }
       }
-    }
-    )
-  }
+    )}
 
   val bindingFuture = Http().newServerAt("localhost", 8082).bind(route)
-  println(s"Server online at http://localhost:8081/\nPress RETURN to stop...")
-  StdIn.readLine()
+  println(s"Server online at http://localhost:8082/\nPress RETURN to stop...")
   bindingFuture.flatMap(_.unbind()).onComplete(_ => system.terminate())
 }

@@ -54,7 +54,6 @@ trait ControllerInterface extends Observable{
 
   def changeState(e: Int): Unit
 
-  def getTargetword(): Map[Int, String]
   def TargetwordToString():String
   //==========================================================
   

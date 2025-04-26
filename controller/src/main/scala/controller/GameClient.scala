@@ -1,18 +1,26 @@
 package controller
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.model.HttpEntity
+//import akka.http.impl.util.JavaMapping.HttpEntity
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
+import akka.http.scaladsl.model.{ContentTypes, HttpMethods, HttpRequest, HttpResponse}
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorMaterializer, Materializer}
+import model.GameInterface
 import model.gamefieldComponent.{GamefieldInterface, gameboard}
 import model.gamemechComponent.gamemechInterface
 import play.api.libs.json.{Format, JsError, JsResult, JsValue, Json, OFormat}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.*
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 
 
-class GameClient(baseurl:String)(implicit system: ActorSystem, mat: ActorMaterializer, ec: ExecutionContext) {
+class GameClient(baseurl:String)() {
+
+  implicit val system: ActorSystem = ActorSystem()
+  implicit val materializer: Materializer = Materializer(system)
+  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
   implicit val gamefieldFormat: Format[GamefieldInterface[GamefieldInterface[String]]] = new Format[GamefieldInterface[GamefieldInterface[String]]] {
     override def reads(json: JsValue): JsResult[GamefieldInterface[GamefieldInterface[String]]] = {
@@ -32,163 +40,176 @@ class GameClient(baseurl:String)(implicit system: ActorSystem, mat: ActorMateria
   private object GamefieldFactory {
     def createGameboard(): GamefieldInterface[GamefieldInterface[String]] = new gameboard()
   }
-  
-  
-  def getGamemech(): Future[gamemechInterface] = {
-    val url = s"$baseurl/gamemech"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein gamemechInterface umgewandelt
-    // todo
-    ???
-  }
 
-  def count(): Future[Boolean] = {
+
+  def count(): Boolean = {
     val url = s"$baseurl/count"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Boolean umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { jsonString =>
-        (Json.parse(jsonString) \ "continue").as[Boolean]
-      }
-    }
+    val request = HttpRequest(HttpMethods.GET, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "continue"-Boolean
+    val entityFuture = response.entity.toStrict(30.seconds)
+    val entity = Await.result(entityFuture, 30.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String)
+    (jsonResponse \ "continue").as[Boolean] // Das "continue"-Feld extrahieren und zurückgeben
   }
 
-  def controllLength(n: Int): Future[Boolean] = {
+  def controllLength(n: Int): Boolean = {
     val url = s"$baseurl/controllLength/$n"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Boolean umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { jsonString =>
-        (Json.parse(jsonString) \ "result").as[Boolean]
-      }
-    }
+    val request = HttpRequest(HttpMethods.GET, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "result"-Boolean
+    val entityFuture = response.entity.toStrict(30.seconds)
+    val entity = Await.result(entityFuture, 30.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String)
+    (jsonResponse \ "result").as[Boolean] // Das "result"-Feld extrahieren und zurückgeben
   }
 
-  def controllRealWord(guess: String): Future[Boolean] = {
+  def controllRealWord(guess: String): Boolean = {
     val url = s"$baseurl/controllRealWord/$guess"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Boolean umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { jsonString =>
-        (Json.parse(jsonString) \ "result").as[Boolean]
-      }
-    }
+    val request = HttpRequest(HttpMethods.GET, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "result"-Boolean
+    val entityFuture = response.entity.toStrict(30.seconds)
+    val entity = Await.result(entityFuture, 30.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String)
+    (jsonResponse \ "result").as[Boolean] // Das "result"-Feld extrahieren und zurückgeben
   }
 
-  def evaluateGuess(guess: String): Future[Map[Int, String]] = {
+  def evaluateGuess(guess: String): Map[Int, String] = {
     val url = s"$baseurl/evaluateGuess/$guess"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Map[Int, String] umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { jsonString =>
-        Json.parse(jsonString).as[Map[Int, String]]
-      }
-    }
+    val request = HttpRequest(HttpMethods.GET, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+
+    // Antwort verarbeiten
+    val entityFuture = response.entity.toStrict(30.seconds)
+    val entity = Await.result(entityFuture, 30.seconds)
+
+    // JSON parsen und als Map[Int, String] zurückgeben
+    val jsonResponse = Json.parse(entity.data.utf8String)
+    jsonResponse.as[Map[Int, String]]
   }
 
-  def guessTransform(guess: String): Future[String] = {
+  def guessTransform(guess: String): String = {
     val url = s"$baseurl/GuessTransform/$guess"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein String umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String]
-    }
+    val request = HttpRequest(HttpMethods.GET, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "transformedGuess"-String
+    val entityFuture = response.entity.toStrict(30.seconds)
+    val entity = Await.result(entityFuture, 30.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String)
+    (jsonResponse \ "transformedGuess").as[String] // Das "transformedGuess"-Feld extrahieren und zurückgeben
   }
 
-  def setVersuche(zahl: Integer): Future[Unit] = {
-    val url = s"$baseurl/setVersuche/$zahl"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Unit umgewandelt
-    responseFuture.map(_ => ())
+  def setVersuche(zahl: Integer): Unit = {
+    val url = s"$baseurl/setN/$zahl"
+    val request = HttpRequest(HttpMethods.PUT, uri = url)
+    Await.result(Http().singleRequest(request), 30.seconds) // Warte auf die Antwort
   }
 
-  def getVersuche(): Future[Int] = {
-    val url = s"$baseurl/getVersuche"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Int umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map(_.toInt)
-    }
+  def getVersuche(): Int = {
+    val url = s"$baseurl/getN"
+    val request = HttpRequest(HttpMethods.GET, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "result"-Integer
+    val entityFuture = response.entity.toStrict(30.seconds)
+    val entity = Await.result(entityFuture, 30.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String)
+    (jsonResponse \ "result").as[Int] // Das "result"-Feld extrahieren und zurückgeben
   }
 
-  def areYouWinningSon(guess: String): Future[Boolean] = {
+  def areYouWinningSon(guess: String): Boolean = {
     val url = s"$baseurl/areYouWinningSon/$guess"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Boolean umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { jsonString =>
-        (Json.parse(jsonString) \ "result").as[Boolean]
-      }
-    }
+    val request = HttpRequest(HttpMethods.GET, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "won"-Boolean
+    val entityFuture = response.entity.toStrict(30.seconds)
+    val entity = Await.result(entityFuture, 30.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String)
+    (jsonResponse \ "won").as[Boolean] // Das "won"-Feld extrahieren und zurückgeben
   }
 
-  def createWinningBoard(): Future[Unit] = {
+  def createWinningBoard(): Unit = {
     val url = s"$baseurl/createwinningboard"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Unit umgewandelt
-    responseFuture.map(_ => ())
+    val request = HttpRequest(HttpMethods.PUT, uri = url)
+    Await.result(Http().singleRequest(request), 30.seconds) // Warte auf die Antwort
   }
 
-  //-----------------------------------------------------------------------------
-  //               //board
-  //-----------------------------------------------------------------------------
-
-  def getGamefield(): Future[GamefieldInterface[GamefieldInterface[String]]] = {
-    val url = s"$baseurl/getGamefield"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein GamefieldInterface umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { jsonString =>
-        Json.parse(jsonString).as[GamefieldInterface[GamefieldInterface[String]]]
-      }
-    }
-  }
-
-  def createGameboard(): Future[Unit] = {
+  def createGameboard(): Unit = {
     val url = s"$baseurl/createGameboard"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Unit umgewandelt
-    responseFuture.map(_ => ())
+    val request = HttpRequest(HttpMethods.PUT, uri = url)
+    Await.result(Http().singleRequest(request), 30.seconds) // Warte auf die Antwort
   }
 
-  def gameToString: Future[String] = {
+  def gameToString: String = {
     val url = s"$baseurl/toString"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein String umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String]
-    }
+    val request = HttpRequest(HttpMethods.GET, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "gameboard"-String
+    val entityFuture = response.entity.toStrict(30.seconds)
+    val entity = Await.result(entityFuture, 30.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String)
+    (jsonResponse \ "gameboard").as[String] // Das "gameboard"-Feld extrahieren und zurückgeben
   }
 
-  //-----------------------------------------------------------------------------
-  //               //Mode
-  //-----------------------------------------------------------------------------
-  
-  def changeState(e: Int): Future[Unit] = {
+  def changeState(e: Int): Unit = {
     val url = s"$baseurl/changeState/$e"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Unit umgewandelt
-    responseFuture.map(_ => ())
+    val request = HttpRequest(HttpMethods.PUT, uri = url)
+    Await.result(Http().singleRequest(request), 30.seconds) // Warte auf die Antwort
   }
 
-  def getTargetword(): Future[Map[Int, String]] = {
-    val url = s"$baseurl/getTargetword"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein Map[Int, String] umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { jsonString =>
-        Json.parse(jsonString).as[Map[Int, String]]
-      }
-    }
-  }
-
-  def targetWordToString(): Future[String] = {
+  def targetWordToString(): String = {
     val url = s"$baseurl/TargetwordToString"
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = url))
-    // Hier wird eine HTTP-Anfrage an die URL gesendet und das Ergebnis in ein String umgewandelt
-    responseFuture.flatMap { response =>
-      Unmarshal(response.entity).to[String]
-    }
+    val request = HttpRequest(HttpMethods.GET, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+
+    // Verarbeite die Antwort und extrahiere den "targetWord"-String
+    val entityFuture = response.entity.toStrict(30.seconds)
+    val entity = Await.result(entityFuture, 30.seconds)
+
+    val jsonResponse = Json.parse(entity.data.utf8String)
+    (jsonResponse \ "targetWord").as[String] // Das "targetWord"-Feld extrahieren und zurückgeben
+  }
+
+
+  //--------------------------------------------------------------------
+  def step(key:Int, feedback:Map[Int,String]):Unit={
+    val json: JsValue = Json.toJson(feedback)
+    val entity = HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+
+    val request = HttpRequest(
+      method = HttpMethods.POST,
+      uri = s"$baseurl/step/$key",
+      entity = entity
+    )
+
+    Http().singleRequest(request)
+  }
+
+  def undoStep(key:Int, feedback:Map[Int, String]):Unit={
+    val json: JsValue = Json.toJson(feedback)
+    val entity = HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
+
+    val request = HttpRequest(
+      method = HttpMethods.POST,
+      uri = s"$baseurl/undoStep/$key",
+      entity = entity
+    )
+
+    Http().singleRequest(request)
   }
 
 }
