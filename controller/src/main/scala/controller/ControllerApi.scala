@@ -1,14 +1,16 @@
 package controller
 
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.server.Directives.*
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.ContentTypes
+import akka.actor.ActorSystem
+import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
-import model.gamefieldComponent.GamefieldInterface
-import model.gamemodeComponnent.GamemodeInterface
+import akka.stream.{ActorMaterializer, Materializer}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
+import akka.http.scaladsl.server.Directives.*
 import play.api.libs.json.Json
 import util.{Event, Observer}
+
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
+import scala.util.{Failure, Success}
 
 
 /**
@@ -19,8 +21,10 @@ import util.{Event, Observer}
  */
 class ControllerApi(using var controller: ControllerInterface) extends Observer {
   // Registriert die API als Observer des Controllers
-  controller.add(this) //unsicher ob wir die API als Observer brauchen
 
+  implicit val system: ActorSystem = ActorSystem()
+  implicit val materializer: Materializer = Materializer(system)
+  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 //Note: getTargetword -> getTargetwordString
   /**
    * Definiert die HTTP-Routen für die API.
@@ -28,8 +32,8 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
    * - `GET /contoller/count`: Gibt zurück, ob das Spiel fortgesetzt werden kann.
    * Die Antwort ist ein JSON-Objekt mit einem `continue`-Feld, das einen Boolean-Wert enthält.
    */
-  val route: Route =
-  pathPrefix("contoller") {
+  val routes: Route =
+  pathPrefix("controller") {
     concat(
       get {
         path("getCount") {
@@ -64,7 +68,7 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
           val result = controller.load()
           complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("message" -> result).toString()))
         } ~
-        path("getGameBoard") { 
+        path("getGameBoard") {
           val result = controller.toString
           complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("gameboard" -> result).toString()))
         } ~
@@ -106,12 +110,14 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
           complete(StatusCodes.OK, "Versuche set")
         } ~
         path("patchChangeState" / IntNumber) { state =>
+          println("Schwirigkeit wurde gewechselt")
           controller.changeState(state)
           complete(StatusCodes.OK, "State changed")
         }
       }
     )
   }
+
 
   /**
    * Wird aufgerufen, wenn der Controller ein Event auslöst.
@@ -120,4 +126,15 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
    * @param e Das ausgelöste Event.
    */
   override def update(e: Event): Unit = ???
+
+  // Binde den Server an localhost:8080
+  val bindFuture = Http().newServerAt("localhost", 8081).bind(routes)
+
+  // Behandle das Future-Ergebnis von bind
+  bindFuture.onComplete {
+    case Success(binding) =>
+      println(s"Server läuft auf ${binding.localAddress}")
+    case Failure(ex) =>
+      println(s"Fehler beim Starten des Servers: $ex")
+  }
 }
