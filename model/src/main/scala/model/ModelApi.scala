@@ -136,7 +136,12 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
       }
     )}
 
-  val bindingFuture = Http().newServerAt("localhost", 8082).bind(route)
-  println(s"Server online at http://localhost:8082/\nPress RETURN to stop...")
-  bindingFuture.flatMap(_.unbind()).onComplete(_ => system.terminate())
+  val bindFuture = Http().newServerAt("localhost", 8082).bind(route)
+  // Behandle das Future-Ergebnis von bind
+  bindFuture.onComplete {
+    case Success(binding) =>
+      println(s"Model Server läuft auf ${binding.localAddress}")
+    case Failure(ex) =>
+      println(s"Fehler beim Starten des Servers: $ex")
+  }
 }

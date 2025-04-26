@@ -42,9 +42,9 @@ object wordle {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
 
-    ModelApi()
-    ControllerApi()
-    UIApi()
+    ModelApi() // Port 8082
+    ControllerApi() // Port 8081
+    UIApi() //Port 8080
 
     // Begrüßung über die API holen
     val welcome = Await.result(callApi(HttpMethods.GET, "http://localhost:8080/ui/tui"), 30.seconds)
