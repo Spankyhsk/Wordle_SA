@@ -4,8 +4,8 @@ WORKDIR /app
 
 COPY . .
 
-RUN sbt aview/compile
+RUN sbt model/compile
 
-EXPOSE 8080
+EXPOSE 8082
 
-CMD ["sbt", "aview/run"]
+CMD ["sbt", "model/run"]

@@ -12,6 +12,8 @@ ThisBuild / libraryDependencies += "com.typesafe.akka" %% "akka-stream" % "2.8.8
 
 lazy val rest = project.in(file("rest"))
   .settings(
+    name := "rest",
+    Compile / mainClass := Some("rest.RestService"),
     scalaVersion := scala3Version,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % "10.5.3",
@@ -22,6 +24,8 @@ lazy val rest = project.in(file("rest"))
 
 lazy val model = project.in(file("model"))
   .settings(
+    name := "model",
+    Compile / mainClass := Some("model.ModelServer"),
     scalaVersion := scala3Version,
     libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.3",
     libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "2.2.0"
@@ -31,11 +35,17 @@ lazy val util = project.in(file("util"))
   .settings(scalaVersion := scala3Version)
 
 lazy val controller = project.in(file("controller"))
-  .settings(scalaVersion := scala3Version)
+  .settings(
+    name := "controller",
+    Compile / mainClass := Some("controller.ControllerServer"),
+    scalaVersion := scala3Version
+  )
   .dependsOn(model, util)
 
 lazy val aview = project.in(file("aview"))
   .settings(
+    name := "aview",
+    Compile / mainClass := Some("aview.UIServer"),
     scalaVersion := scala3Version,
     libraryDependencies += ("org.scala-lang.modules" %% "scala-swing" % "3.0.0").cross(CrossVersion.for3Use2_13)
   )
@@ -68,5 +78,3 @@ lazy val root = project
   )
   .dependsOn(aview, controller, util, model)
   .aggregate(util, aview, controller, model)
-
-

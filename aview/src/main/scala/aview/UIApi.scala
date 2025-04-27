@@ -18,10 +18,10 @@ class UIApi()() extends Observable{
   implicit val materializer: Materializer = Materializer(system)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
-  val TUI = new TUI(new ControllerClient("http://localhost:8081/controller"))
-  val GUISWING = new GUISWING(new ControllerClient("http://localhost:8081/controller"))
+  val TUI = new TUI(new ControllerClient("http://controller-service:8081/controller"))
+  //val GUISWING = new GUISWING(new ControllerClient("http://localhost:8081/controller"))
   add(TUI)
-  add(GUISWING)
+  //add(GUISWING)
 
   // Deine Route für den TUI-Endpunkt
   val routes: Route = {
@@ -73,7 +73,7 @@ class UIApi()() extends Observable{
 
 
   // Binde den Server an localhost:8080
-  val bindFuture = Http().newServerAt("localhost", 8080).bind(routes)
+  val bindFuture = Http().newServerAt("0.0.0.0", 8080).bind(routes)
 
   // Behandle das Future-Ergebnis von bind
   bindFuture.onComplete {

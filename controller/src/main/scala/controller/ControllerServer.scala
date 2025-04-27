@@ -1,5 +1,7 @@
 package controller
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 
 object ControllerServer {
@@ -7,13 +9,14 @@ object ControllerServer {
     println("Starte Controller-Server...")
 
     //Clients bauen
-    val gameClient = new GameClient("http://localhost:8082/model/game")
-    val fileClient = new FileIOClient("http://localhost:8082/model/fileIO")
-    val observerClient = new ObserverClient("http://localhost:8080/ui")
+    val gameClient = new GameClient("http://model-service:8082/model/game")
+    val fileClient = new FileIOClient("http://model-service:8082/model/fileIO")
+    val observerClient = new ObserverClient("http://aview-service:8080/ui")
 
     //Controller erzeugen
     given controller: ControllerInterface = new controll(gameClient, fileClient, observerClient)
-    new ControllerApi() // ← Das startet dann automatisch den HTTP-Server
+    val controllerApi = new ControllerApi() // ← Das startet dann automatisch den HTTP-Server
+    Await.result(controllerApi.system.whenTerminated, Duration.Inf)
   }
 }
 

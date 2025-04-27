@@ -136,7 +136,7 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
       }
     )}
 
-  val bindFuture = Http().newServerAt("localhost", 8082).bind(route)
+  val bindFuture = Http().newServerAt("0.0.0.0", 8082).bind(route)
   // Behandle das Future-Ergebnis von bind
   bindFuture.onComplete {
     case Success(binding) =>
