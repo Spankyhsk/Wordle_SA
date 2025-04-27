@@ -13,7 +13,7 @@ ThisBuild / libraryDependencies += "com.typesafe.akka" %% "akka-stream" % "2.8.8
 lazy val rest = project.in(file("rest"))
   .settings(
     name := "rest",
-    Compile / mainClass := Some("rest.RestService"),
+    Compile / mainClass := Some("rest.RestServer"),
     scalaVersion := scala3Version,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http" % "10.5.3",

@@ -1,0 +1,53 @@
+services:
+  model:
+    build:
+      context: .
+      dockerfile: model/Dockerfile
+    container_name: model-service
+    ports:
+      - "8082:8082"   # model läuft auf Port 8082
+    networks:
+      - app-network
+
+  controller:
+    build:
+      context: .
+      dockerfile: controller/Dockerfile
+    container_name: controller-service
+    ports:
+      - "8081:8081"   # controller läuft auf Port 8081
+    depends_on:
+      - model
+    networks:
+      - app-network
+
+  aview:
+    build:
+      context: .
+      dockerfile: aview/Dockerfile
+    container_name: aview-service
+    ports:
+      - "8080:8080"   # aview läuft auf Port 8080
+    depends_on:
+      - controller
+    networks:
+      - app-network
+
+
+  rest:
+    build:
+      context: .
+      dockerfile: rest/Dockerfile
+    container_name: rest-service
+    ports:
+      - "9000:9000"   # rest läuft auf Port 9000 (angenommen)
+    depends_on:
+      - model
+      - controller
+      - aview
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
