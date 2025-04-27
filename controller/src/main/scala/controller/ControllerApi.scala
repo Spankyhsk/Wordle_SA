@@ -131,7 +131,7 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
   override def update(e: Event): Unit = ???
 
   // Binde den Server an localhost:8080
-  val bindFuture = Http().newServerAt("localhost", 8081).bind(routes)
+  val bindFuture = Http().newServerAt("0.0.0.0", 8081).bind(routes)
 
   // Behandle das Future-Ergebnis von bind
   bindFuture.onComplete {

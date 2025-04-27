@@ -53,5 +53,50 @@ sbt coverageReport
 
 
 
+Docker
+Jedes Modul kann einzeln in einem Docker Container gestartet werden.
+Dafür muss sich im root Verzeichnis befunden werden.
+Hier können folgende Befehle ausführen:
+```code
+docker build -f aview/Dockerfile -t aview-service .
+docker build -f controller/Dockerfile -t controller-service .
+docker build -f model/Dockerfile -t model-service .
+```
+Damit werden die Images erstellt.
+
+Damti die Container später im gleichen Netzwerk sind, muss ein Docker Netzwerk erstellt werden.
+```code
+docker network create wordle-network
+```
+Die Images können dann gestartet werden.
+```code
+docker run --name aview-service --network wordle-network -p 8080:8080 aview-service
+docker run --name controller-service --network wordle-network -p 8081:8081 controller-service
+docker run --name model-service --network wordle-network -p 8082:8082 model-service
+```
+
+Wichtig, dass die Ports 8080, 8081 und 8082 nicht schon belegt sind.
+Zusätzlich muss darauf geachtet werden, dass die Container die richtigen Namen haben, da über die Namen die APIs aufgerufen werden.
+
+Oder Docker-Compose nutzen.
+Mit
+```code
+docker compose up -d
+```
+im Projekt-Root, werden alle Images automatisch gebaut und die Container gestartet.
+Mit
+```code
+docker compose down
+```
+können die Container gestoppt werden, die Container werden damit auch gleich gelöscht, die Images bleiben allerdings bestehen.
+
+
+
+
+
+
+
+
+
  [![Tests](https://github.com/spankyhsk/wordle/actions/workflows/scala.yml/badge.svg)](https://github.com/spankyhsk/wordle/actions/workflows/scala.yml)
  [![Coverage Status](https://coveralls.io/repos/github/Spankyhsk/Wordle/badge.svg?branch=main)](https://coveralls.io/github/Spankyhsk/Wordle?branch=main)
