@@ -3,9 +3,10 @@ package controller
 
 import model.FileIOComponent.{FileIOInterface, FileIOJSON, FileIOXML}
 import model.{Game, GameInterface}
+import util.Event.{Move, NEW, WIN}
 import util.{Event, Observable, UndoManager}
 
-case class controll (gameClient:GameClient, fileClient:FileIOClient)extends ControllerInterface with Observable {
+case class controll (gameClient:GameClient, fileClient:FileIOClient, observerClient:ObserverClient)extends ControllerInterface with Observable {
 
 
   //============================================================================
@@ -16,7 +17,7 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient)extends Cont
   def step(key:Int, feedback:Map[Int, String]):Unit={
     gameClient.step(key, feedback)
   }
-  
+
   def undoStep(key:Int, feedback:Map[Int,String]):Unit={
     gameClient.undoStep(key, feedback)
   }
@@ -31,6 +32,7 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient)extends Cont
     val continue = gameClient.count()
     if (!continue) {
       notifyObservers(Event.LOSE)
+      observerClient.triggerEvent(Event.LOSE)
     }
     continue
   }
@@ -63,6 +65,7 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient)extends Cont
     val won = gameClient.areYouWinningSon(guess)
     if (won) {
       notifyObservers(Event.WIN)
+      observerClient.triggerEvent(WIN)
     }
     won
   }
@@ -70,6 +73,7 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient)extends Cont
   def createwinningboard(): Unit = {
     gameClient.createWinningBoard()
     notifyObservers(Event.Move)
+    observerClient.triggerEvent(Move)
   }
 
   //----------------------------------------------------------------------------
@@ -97,6 +101,7 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient)extends Cont
   def changeState(e: Int): Unit = {
     gameClient.changeState(e)
     notifyObservers(Event.NEW)
+    observerClient.triggerEvent(NEW)
   }
 
 
@@ -115,11 +120,13 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient)extends Cont
   def set(key: Int, feedback: Map[Int, String]): Unit = {
     undoManager.doStep(new SetCommand(key, feedback, this))
     notifyObservers(Event.Move)
+    observerClient.triggerEvent(Event.Move)
   }
 
   def undo(): Unit = {
     undoManager.undoStep
     notifyObservers(Event.UNDO)
+    observerClient.triggerEvent(Event.UNDO)
   }
 
   //=============================================================================
@@ -131,11 +138,13 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient)extends Cont
   def save():Unit={
     fileClient.save()
     notifyObservers(Event.Move)
+    observerClient.triggerEvent(Event.Move)
   }
 
   def load():String={
     val message = fileClient.load()
     notifyObservers(Event.Move)
+    observerClient.triggerEvent(Event.Move)
     message
   }
 
