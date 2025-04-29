@@ -42,7 +42,7 @@ class GUISWING(controllerClient: ControllerClient) extends Frame with Observer {
         }
       }
       case Event.NEW =>{
-        controllerClient.patchVersuche(1)
+        controllerClient.putVersuche(1)
         inputTextField.enabled = true
         editDoneEventFired = true
       }
@@ -288,7 +288,7 @@ class GUISWING(controllerClient: ControllerClient) extends Frame with Observer {
       if (controllerClient.getControllLength(guess.length) && controllerClient.getControllRealWord(guess)) {
         if (!controllerClient.getAreYouWinningSon(guess) && controllerClient.getCount()) {
           controllerClient.putMove(controllerClient.getVersuche(), controllerClient.getEvaluateGuess(guess))
-          controllerClient.patchVersuche(controllerClient.getVersuche() + 1)
+          controllerClient.putVersuche(controllerClient.getVersuche() + 1)
         } else {
           controllerClient.putMove(controllerClient.getVersuche(), controllerClient.getEvaluateGuess(guess))
         }

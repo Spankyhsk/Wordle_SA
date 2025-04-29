@@ -167,7 +167,7 @@ class GameClient(baseurl:String)() {
 
   def changeState(e: Int): Unit = {
     val url = s"$baseurl/changeState/$e"
-    val request = HttpRequest(HttpMethods.PUT, uri = url)
+    val request = HttpRequest(HttpMethods.PATCH, uri = url)
     Await.result(Http().singleRequest(request), 30.seconds) // Warte auf die Antwort
   }
 

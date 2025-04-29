@@ -18,7 +18,7 @@ class FileIOClient(baseurl:String)() {
 
   def save(): Unit = {
     val url = s"$baseurl/save"
-    val request = HttpRequest(HttpMethods.PUT, uri = url) // PUT für die "save"-Aktion
+    val request = HttpRequest(HttpMethods.POST, uri = url) // PUT für die "save"-Aktion
     Await.result(Http().singleRequest(request), 5.seconds) // Warte auf die Antwort, aber ignoriere sie
   }
 

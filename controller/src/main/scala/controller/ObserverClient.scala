@@ -17,7 +17,7 @@ class ObserverClient(baseurl:String)() {
 
   def triggerEvent(event:Event): Future[Unit] = {
     // Controller löst ein Ereignis aus
-    println("Controller hat ein Event ausgelöst!")
+    //println("Controller hat ein Event ausgelöst!")
 
     // Event an UI API senden (z.B. "EVENT_TRIGGERED")
     val eventJson = s"""{"event": "${event.toString}"}"""
@@ -31,7 +31,7 @@ class ObserverClient(baseurl:String)() {
     // Sende den Request
     Http().singleRequest(request).map {
       case response if response.status == StatusCodes.OK =>
-        println(s"Event ${event.toString} erfolgreich an die UI gesendet.")
+        //println(s"Event ${event.toString} erfolgreich an die UI gesendet.")
       case _ =>
         println(s"Fehler beim Senden des Events ${event.toString} an die UI.")
     }
