@@ -15,10 +15,10 @@ import model.FileIOComponent.FileIOJSON
 object Default:
 
   // Game-Komponenten
-  given GameInterface = new Game(new GameMech(), new gameboard(), gamemode(1))
-  given GamefieldInterface[GamefieldInterface[String]] = new gameboard()
-  given gamemechInterface = new GameMech()
-  given GamemodeInterface = gamemode(1)
+  given GameInterface = Game("norm")
+//  given GamefieldInterface[GamefieldInterface[String]] = new gameboard()
+//  given gamemechInterface = new GameMech()
+//  given GamemodeInterface = gamemode(1)
 
   // FileIO
   given FileIOInterface = new FileIOJSON()
@@ -30,5 +30,5 @@ object Default:
   given ControllerInterface = new controll(new GameClient("http://model-service:8082/model/game"), new FileIOClient("http://model-service:8082/model/fileIO"), new ObserverClient("http://ui-service:8080/ui"))
 
   // Optional: Factory Methoden
-  def createGame(): GameInterface = new Game(new GameMech(), new gameboard(), gamemode(1))
-  def createGameWithMode(e: Int): GameInterface = new Game(new GameMech(), new gameboard(), gamemode(e))
+//  def createGame(): GameInterface = new Game(new GameMech(), new gameboard(), gamemode(1))
+//  def createGameWithMode(e: Int): GameInterface = new Game(new GameMech(), new gameboard(), gamemode(e))

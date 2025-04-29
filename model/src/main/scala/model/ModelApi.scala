@@ -4,9 +4,9 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.{ActorMaterializer, Materializer}
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives.*
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, JsString, Json}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
@@ -28,29 +28,35 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
           complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("continue" -> result).toString()))
         }
       },
-      path("game" / "controllLength") {
-        parameter("n".as[Int]) { n =>
-          val result = game.controllLength(n)
-          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
-        }
+      path("game" / "controllLength" / IntNumber) { guess =>
+        val result = game.controllLength(guess)
+        complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
       },
-      path("game" / "controllRealWord") {
-        parameter("guess") { guess =>
-          val result = game.controllRealWord(guess)
-          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
-        }
+      path("game" / "controllRealWord"/ Segment) { guess =>
+        val result = game.controllRealWord(guess)
+        val jsonResponse = Json.obj("result" -> result)
+        complete(
+          HttpResponse(
+            StatusCodes.OK,
+            entity = HttpEntity(ContentTypes.`application/json`, Json.stringify(jsonResponse))
+          )
+        )
       },
-      path("game" / "evaluateGuess") {
-        parameter("guess") { guess =>
-          val result = game.evaluateGuess(guess)
-          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
-        }
+      path("game" / "evaluateGuess"/ Segment) { guess =>
+        val result = game.evaluateGuess(guess)
+        val convertedMap = result.map{ case(k, v) => k.toString -> JsString(v) }
+        val json = JsObject(convertedMap)
+        complete(HttpEntity(ContentTypes.`application/json`, Json.stringify(json)))
       },
-      path("game" / "areYouWinningSon") {
-        parameter("guess") { guess =>
-          val result = game.areYouWinningSon(guess)
-          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("won" -> result).toString()))
-        }
+      path("game" / "areYouWinningSon" / Segment) { guess =>
+        val result = game.areYouWinningSon(guess)
+        val jsonResponse = Json.obj("won" -> result)
+        complete(
+          HttpResponse(
+            StatusCodes.OK,
+            entity = HttpEntity(ContentTypes.`application/json`, Json.stringify(jsonResponse))
+          )
+        )
       },
       path("game" / "createwinningboard") {
         put {
@@ -59,7 +65,7 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
         }
       },
       path("game" / "setN" / IntNumber) { versuche =>
-        post {
+        put {
             game.setN(versuche)
             complete(StatusCodes.OK)
           }
@@ -73,7 +79,13 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
       path("game"/ "GuessTransform"/ Segment){ guess =>
         get {
           val result = game.GuessTransform(guess)
-          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("transformedGuess" -> result).toString()))
+          val jsonResponse = Json.obj("transformedGuess" -> result)
+          complete(
+            HttpResponse(
+              StatusCodes.OK,
+              entity = HttpEntity(ContentTypes.`application/json`, Json.stringify(jsonResponse))
+            )
+          )
         }
       },
       path("game" / "createGameboard") {
@@ -109,7 +121,7 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
       }
     },
     path("fileIO" / "load") {
-      post {
+      get {
         val result = fileIO.load(game)
         complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
       }
