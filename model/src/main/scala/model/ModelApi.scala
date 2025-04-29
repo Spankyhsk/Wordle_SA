@@ -65,7 +65,7 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
         }
       },
       path("game" / "setN" / IntNumber) { versuche =>
-        post {
+        put {
             game.setN(versuche)
             complete(StatusCodes.OK)
           }

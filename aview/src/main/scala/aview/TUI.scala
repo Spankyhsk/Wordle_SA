@@ -65,8 +65,9 @@ class TUI (controllerClient: ControllerClient)extends Observer:
         val guess = controllerClient.getGuessTransform(input)
         if(controllerClient.getControllLength(guess.length) && controllerClient.getControllRealWord(guess)) {
           if (!controllerClient.getAreYouWinningSon(guess)&& controllerClient.getCount()) {
+            println(controllerClient.getVersuche() + "Versuch")
             controllerClient.putMove(controllerClient.getVersuche(), controllerClient.getEvaluateGuess(guess))
-            controllerClient.patchVersuche(controllerClient.getVersuche() + 1)
+            controllerClient.putVersuche(controllerClient.getVersuche() + 1)
           }else{
             controllerClient.putMove(controllerClient.getVersuche(), controllerClient.getEvaluateGuess(guess))
           }
@@ -86,12 +87,12 @@ class TUI (controllerClient: ControllerClient)extends Observer:
         }
       }
       case Event.NEW=>{
-        controllerClient.patchVersuche(1)
+        controllerClient.putVersuche(1)
         newgame = false
         println("Errate Wort:") //guess
       }
       case Event.UNDO=>{
-        controllerClient.patchVersuche(controllerClient.getVersuche()-1)
+        controllerClient.putVersuche(controllerClient.getVersuche()-1)
         println(controllerClient.getGameBoard())
         println("Dein Tipp: ")
       }

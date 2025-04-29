@@ -105,13 +105,13 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
         path("putUndoMove") {
           controller.undo()
           complete(StatusCodes.OK, "Move undone")
+        } ~ 
+        path("putVersuche"/ IntNumber){ versuche =>
+          controller.setVersuche(versuche)
+          complete(StatusCodes.OK, "Versuche set")
         }
       },
       patch {
-        path("patchVersuche" / IntNumber) { versuche =>
-          controller.setVersuche(versuche)
-          complete(StatusCodes.OK, "Versuche set")
-        } ~
         path("patchChangeState" / IntNumber) { state =>
           println("Schwirigkeit wurde gewechselt")
           controller.changeState(state)

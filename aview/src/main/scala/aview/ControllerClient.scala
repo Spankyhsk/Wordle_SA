@@ -105,9 +105,9 @@ class ControllerClient(baseurl:String)() {
     Http().singleRequest(request)
   }
 
-  def patchVersuche(versuche: Int): Unit = {
-    val url = s"$baseurl/patchVersuche/$versuche"
-    val request = HttpRequest(HttpMethods.PATCH, uri = url)
+  def putVersuche(versuche: Int): Unit = {
+    val url = s"$baseurl/putVersuche/$versuche"
+    val request = HttpRequest(HttpMethods.PUT, uri = url)
     val response = Await.result(Http().singleRequest(request), 30.seconds)
 
 //    if (response.status == OK) {
