@@ -3,7 +3,7 @@ package aview
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes.OK
-import akka.http.scaladsl.model.{HttpMethods, HttpRequest, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCodes}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.{ActorMaterializer, Materializer}
 import play.api.libs.json.*
@@ -85,19 +85,24 @@ class ControllerClient(baseurl:String)() {
 
     val entity = Await.result(response.entity.toStrict(30.seconds), 30.seconds)
     val jsonResponse = Json.parse(entity.data.utf8String)
-    jsonResponse.as[Map[Int, String]]
+    val map: Map[Int, String] = jsonResponse.as[Map[String, String]].map {
+      case (k, v) => k.toInt -> v
+    }
+    map
   }
 
   def putMove(versuche: Int, feedback: Map[Int, String]): Unit = {
     val url = s"$baseurl/putMove/$versuche"
-    val request = HttpRequest(HttpMethods.PUT, uri = url)
-    val response = Await.result(Http().singleRequest(request), 30.seconds)
+    val json: JsValue = Json.toJson(feedback)
+    val entity = HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
 
-//    if (response.status == OK) {
-//      println("Move erfolgreich")
-//    } else {
-//      println(s"Fehler beim Verschieben: ${response.status}")
-//    }
+    val request = HttpRequest(
+      method = HttpMethods.PUT,
+      uri = s"$baseurl/putMove/$versuche",
+      entity = entity
+    )
+
+    Http().singleRequest(request)
   }
 
   def patchVersuche(versuche: Int): Unit = {
