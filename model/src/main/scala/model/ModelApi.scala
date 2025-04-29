@@ -28,11 +28,13 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
           complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("continue" -> result).toString()))
         }
       },
-      path("game" / "controllLength") {
-        parameter("n".as[Int]) { n =>
-          val result = game.controllLength(n)
-          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
-        }
+      path("game" / "controllLength" / IntNumber) { guess =>
+        val result = game.controllLength(guess)
+        complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
+//        parameter("n".as[Int]) { n =>
+//          val result = game.controllLength(n)
+//          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
+//        }
       },
       path("game" / "controllRealWord") {
         parameter("guess") { guess =>
