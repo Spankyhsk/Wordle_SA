@@ -121,7 +121,7 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
       }
     },
     path("fileIO" / "load") {
-      post {
+      get {
         val result = fileIO.load(game)
         complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
       }

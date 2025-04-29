@@ -71,7 +71,7 @@ object wordle {
 
       // Input an Server senden
       val response = Await.result(callApi(HttpMethods.PUT, s"http://localhost:8080/ui/tui/processInput/$input"), 30.seconds)
-      if (response.nonEmpty) println(response)
+      //if (response.nonEmpty) println(response)
     }
   }
 }

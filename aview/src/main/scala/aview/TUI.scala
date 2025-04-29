@@ -65,7 +65,6 @@ class TUI (controllerClient: ControllerClient)extends Observer:
         val guess = controllerClient.getGuessTransform(input)
         if(controllerClient.getControllLength(guess.length) && controllerClient.getControllRealWord(guess)) {
           if (!controllerClient.getAreYouWinningSon(guess)&& controllerClient.getCount()) {
-            println(controllerClient.getVersuche() + "Versuch")
             controllerClient.putMove(controllerClient.getVersuche(), controllerClient.getEvaluateGuess(guess))
             controllerClient.putVersuche(controllerClient.getVersuche() + 1)
           }else{
