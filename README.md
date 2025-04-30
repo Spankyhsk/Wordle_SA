@@ -91,7 +91,36 @@ docker compose down
 können die Container gestoppt werden, die Container werden damit auch gleich gelöscht, die Images bleiben allerdings bestehen.
 
 
+# Hier habt ihr noch mal die Befehle für die Abgabe
 
+am besten löscht ihr die ganzen Container UND die Images. Dann baut ihr die Images mit diesen Befehlen: (ihr könnt mehere terminals öffnen und für jeden Befehl ein Terminal benutzen, dann müsst ihr nicht immer warten bis ihr das nächste Image bauen könnt.)
+```
+docker build -f aview/Dockerfile -t aview-service .
+docker build -f controller/Dockerfile -t controller-service .
+docker build -f model/Dockerfile -t model-service .
+docker build -f main/Dockerfile -t wordle .
+```
+für Rest, aber hier jetzt nicht notwendig:
+```
+docker build -f rest/Dockerfile -t rest-service .
+```
+
+wenn ihr die Images gebaut habt könnt ihr die Container starten. Hier ist die Reihenfolge wichtig in der Ihr startet:
+```
+docker run --name model-service --network wordle-network -p 8082:8082 model-service
+docker run --name controller-service --network wordle-network -p 8081:8081 controller-service
+docker run --name aview-service --network wordle-network -p 8080:8080 aview-service
+```
+wichtig, erst jetzt nach dem ihr diese 3 Container erstellt habt erst:
+```
+docker run -it --name wordle --network wordle-network -p 8085:8085 wordle
+```
+hier bei der main ist das -it sehr wichtig!
+
+Jetzt müsst ihr im Docker-Desktop den Container aview anklicken, dann öffnet sich die Ansicht mit der Console vom aview. Hier könnt ihr nichts eingeben, aber hier kommt der tui output rein.
+Den Input mach ihr weiter über das terminal mit dem Ihr die wordle gestartet habt
+
+gleich kommen ein paar bilder die das im idealfall noch mal verdeutlichen
 
 
 
