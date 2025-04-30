@@ -1,5 +1,5 @@
 import sbt.Keys.libraryDependencies
-import sbt._
+import sbt.*
 
 val scala3Version = "3.3.1"
 val scalaFXVersion = "16.0.0-R24"
@@ -50,6 +50,16 @@ lazy val aview = project.in(file("aview"))
     libraryDependencies += ("org.scala-lang.modules" %% "scala-swing" % "3.0.0").cross(CrossVersion.for3Use2_13)
   )
   .dependsOn(controller, util)
+
+lazy val main = project.in(file("main"))
+  .settings(
+    name := "main",
+    Compile / mainClass := Some("main.wordle"),
+    scalaVersion := scala3Version,
+    libraryDependencies += ("org.scala-lang.modules" %% "scala-swing" % "3.0.0").cross(CrossVersion.for3Use2_13)
+  )
+  .dependsOn(aview, controller, util, model)
+
 
 lazy val root = project
   .in(file("."))

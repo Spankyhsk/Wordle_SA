@@ -1,13 +1,12 @@
-package de.htwg.se.wordle
+package main
 
+//import com.google.inject.Guice
+import controller.*
 import model.*
+import model.FileIOComponent.{FileIOInterface, FileIOJSON}
 import model.gamefieldComponent.{GamefieldInterface, gameboard}
 import model.gamemechComponent.{GameMech, gamemechInterface}
 import model.gamemodeComponnent.{GamemodeInterface, gamemode}
-import controller.{ControllerInterface, FileIOClient, GameClient, ObserverClient, controll}
-import com.google.inject.Guice
-import model.FileIOComponent.FileIOInterface
-import model.FileIOComponent.FileIOJSON
 
 
 

@@ -33,6 +33,21 @@ services:
     networks:
       - app-network
 
+  main:
+    build:
+      context: .
+      dockerfile: main/Dockerfile
+    container_name: wordle
+    stdin_open: true
+    tty: true
+    ports:
+      - "8085:8085"   # main läuft auf Port 8085
+    depends_on:
+      - model
+      - controller
+      - aview
+    networks:
+      - app-network
 
   rest:
     build:

@@ -1,9 +1,8 @@
-package de.htwg.se.wordle
+package main
 
-import com.google.inject.AbstractModule
-import net.codingwell.scalaguice.ScalaModule
-import controller.controll
-import controller.ControllerInterface
+//import com.google.inject.AbstractModule
+//import controller.{ControllerInterface, controll}
+//import net.codingwell.scalaguice.ScalaModule
 
 
 //class WordleModuleXML extends AbstractModule with ScalaModule {
