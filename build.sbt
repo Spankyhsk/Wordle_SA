@@ -28,7 +28,11 @@ lazy val model = project.in(file("model"))
     Compile / mainClass := Some("model.ModelServer"),
     scalaVersion := scala3Version,
     libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.3",
-    libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "2.2.0"
+    libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "2.2.0",
+    libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % "3.5.1",
+    libraryDependencies += "com.typesafe.slick" %% "slick" % "3.5.1",
+    libraryDependencies += "org.slf4j" % "slf4j-nop" % "1.6.4",
+    libraryDependencies += "org.postgresql" % "postgresql" % "42.7.3"
   )
 
 lazy val util = project.in(file("util"))

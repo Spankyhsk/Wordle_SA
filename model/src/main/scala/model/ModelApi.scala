@@ -13,8 +13,9 @@ import scala.util.{Failure, Success}
 import model.Game
 import model.*
 import model.FileIOComponent.FileIOInterface
+import model.persistenceComponent.PersistenceInterface
 
-class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
+class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface, var db:PersistenceInterface){
   
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(system)
@@ -144,6 +145,12 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
             game.undoStep(key, receivedMap)
             complete(StatusCodes.OK)
           }
+        }
+      },
+      path("persistence"/"putGame"){
+        put{
+          db.save(game)
+          complete(StatusCodes.OK)
         }
       }
     )}
