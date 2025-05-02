@@ -5,6 +5,7 @@ import model.persistenceComponent.entity.BoardData
 import model.persistenceComponent.slickComponent.BoardTable
 import slick.jdbc.JdbcBackend.Database
 import slick.lifted.TableQuery
+import slick.jdbc.PostgresProfile.api._
 
 class BoardDAO(db:Database) extends DAOInterface[BoardData, Long]{
   

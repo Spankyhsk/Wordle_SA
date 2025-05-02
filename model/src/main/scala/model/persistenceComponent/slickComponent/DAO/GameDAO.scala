@@ -4,6 +4,7 @@ import model.persistenceComponent.DAOInterface
 import model.persistenceComponent.slickComponent.GameTable
 import slick.jdbc.JdbcBackend.Database
 import slick.lifted.TableQuery
+import slick.jdbc.PostgresProfile.api._
 
 class GameDAO(db:Database) extends DAOInterface[String, Long]{
   

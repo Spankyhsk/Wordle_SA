@@ -1,10 +1,10 @@
 package model.persistenceComponent.entity
 
 import model.gamefieldComponent.GamefieldInterface
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.{JsArray, JsObject, JsString, JsValue, Json}
 
 case class BoardData(gameId:Long, boardMap:Map[Int, GamefieldInterface[String]]) {
-  
+
   def gameboardToJason(): String = {
     Json.prettyPrint(
       Json.obj(
@@ -21,15 +21,22 @@ case class BoardData(gameId:Long, boardMap:Map[Int, GamefieldInterface[String]])
       ))
   }
 
-  def gameboardFromJason(seq: Seq[JsValue]): Map[Int, Map[Int, String]] = {
-    val resultMap: Map[Int, Map[Int, String]] = seq.map { jsValue =>
-      val key = (jsValue \ "key").as[Int]
-      val gameField = (jsValue \ "gamefield").as[Map[String, String]].map {
-        case (k, v) => k.toInt -> v
-      }
-      key -> gameField
-    }.toMap
+  def gameboardFromJason(gameboard:String): Map[Int, Map[Int, String]] = {
 
-    resultMap
+    val jsValue = Json.parse(gameboard)
+
+    val gameboardArray = (jsValue \ "gameboard").as[JsArray]
+
+    gameboardArray.value.map { entry =>
+      val key = (entry \ "key").as[Int]
+
+      val gamefieldJsObj = (entry \ "gamefield").as[JsObject]
+      val gamefieldMap: Map[Int, String] = gamefieldJsObj.fields.map {
+        case (k, JsString(v)) => k.toInt -> v
+        case (k, v) => throw new RuntimeException(s"Unerwarteter Wert für $k: $v")
+      }.toMap
+
+      key -> gamefieldMap
+    }.toMap
   }
 }

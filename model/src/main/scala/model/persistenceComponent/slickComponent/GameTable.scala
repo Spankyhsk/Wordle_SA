@@ -6,7 +6,7 @@ import slick.ast.ScalaBaseType.longType
 
 
 class GameTable(tag:Tag) extends Table[(Option[Long])](tag, "Game"){
-  def id = column[Option[Long]]("id", O.PrimaryKey, O.AutoInc)
+  def id = column[Option[Long]]("gameId", O.PrimaryKey, O.AutoInc)
   
   def * = (id)
 }

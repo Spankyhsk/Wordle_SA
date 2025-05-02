@@ -6,6 +6,8 @@ import model.persistenceComponent.slickComponent.DAO.{BoardDAO, GameDAO, MechDAO
 import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
 import slick.jdbc.JdbcBackend.Database
 import slick.lifted.TableQuery
+import scala.concurrent.ExecutionContext.Implicits.global
+import model.persistenceComponent.entity.{ModeData,MechData,BoardData}
 
 import scala.util.{Failure, Success}
 
@@ -30,7 +32,7 @@ class SlickPersistenceImpl(game: GameInterface) extends PersistenceInterface{
     user = databaseUser,
     password = databasePassword
   )
-  
+
   private val gameTable = TableQuery[GameTable]
   private val modeTable = TableQuery[ModeTable]
   private val mechTable = TableQuery[MechTable]

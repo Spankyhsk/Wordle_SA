@@ -5,6 +5,7 @@ import model.persistenceComponent.entity.ModeData
 import model.persistenceComponent.slickComponent.ModeTable
 import slick.jdbc.JdbcBackend.Database
 import slick.lifted.TableQuery
+import slick.jdbc.PostgresProfile.api._
 
 class ModeDAO(db:Database) extends DAOInterface[ModeData, Long]{
 

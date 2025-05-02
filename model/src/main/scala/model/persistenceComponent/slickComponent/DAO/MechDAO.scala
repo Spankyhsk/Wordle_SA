@@ -5,6 +5,7 @@ import model.persistenceComponent.entity.{MechData, ModeData}
 import model.persistenceComponent.slickComponent.MechTable
 import slick.jdbc.JdbcBackend.Database
 import slick.lifted.TableQuery
+import slick.jdbc.PostgresProfile.api._
 
 class MechDAO(db:Database) extends DAOInterface[MechData, Long]{
 
