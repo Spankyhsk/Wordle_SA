@@ -9,9 +9,9 @@ object ControllerServer {
     println("Starte Controller-Server...")
 
     //Clients bauen
-    val gameClient = new GameClient("http://model-service:8082/model/game")
-    val fileClient = new FileIOClient("http://model-service:8082/model/fileIO")
-    val observerClient = new ObserverClient("http://aview-service:8080/ui")
+    val gameClient = new GameClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082") + "/model/game")
+    val fileClient = new FileIOClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082") + "/model/fileIO")
+    val observerClient = new ObserverClient(sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + "/ui")
 
     //Controller erzeugen
     given controller: ControllerInterface = new controll(gameClient, fileClient, observerClient)

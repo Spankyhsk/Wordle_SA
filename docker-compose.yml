@@ -20,6 +20,9 @@ services:
       - model
     networks:
       - app-network
+    environment:
+      - MODEL_URL=http://model-service:8082
+      - AVIEW_URL=http://aview-service:8080
 
   aview:
     build:
@@ -32,6 +35,10 @@ services:
       - controller
     networks:
       - app-network
+    environment:
+      - CONTROLLER_URL=http://controller-service:8081
+      - RUNNING_IN_DOCKER=true
+      - DISPLAY=host.docker.internal:0
 
   main:
     build:
@@ -48,6 +55,12 @@ services:
       - aview
     networks:
       - app-network
+    environment:
+      - MODEL_URL=http://model-service:8082
+      - CONTROLLER_URL=http://controller-service:8081
+      - AVIEW_URL=http://aview-service:8080
+      - RUNNING_IN_DOCKER=true
+      - DISPLAY=host.docker.internal:0
 
   rest:
     build:
@@ -62,6 +75,10 @@ services:
       - aview
     networks:
       - app-network
+    environment:
+      - MODEL_URL=http://model-service:8082
+      - CONTROLLER_URL=http://controller-service:8081
+      - AVIEW_URL=http://aview-service:8080
 
 networks:
   app-network:
