@@ -20,7 +20,20 @@ class GameDAO(db:Database) extends DAOInterface[String, Long]{
     Await.result(resultFuture, 10.seconds)
   }
 
-  override def findAll(): Seq[String] = ???
+  override def findAll(): Seq[String] = {
+    val query = for{
+      game <- gameTable
+    }yield {
+      (game.gameId, game.name)
+    }
+
+    val resultFuture = db.run(query.result)
+    val resultGame: Seq[(Long, String)] = Await.result(resultFuture, 10.seconds)
+    val gameSeq: Seq[String] = resultGame.map{case (gameId, name) =>
+      s"$gameId := $name"
+    }
+    gameSeq
+  }
 
   override def findById(id: Long): String = ???
 

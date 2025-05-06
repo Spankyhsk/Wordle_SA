@@ -102,7 +102,10 @@ class SlickPersistenceImpl() extends PersistenceInterface{
     game.setLimit(mode.limit)
   }
 
-  override def search(): String = ???
+  override def search(): String = {
+    val gamelogs: Seq[String] = GameDAO(database).findAll()
+    gamelogs.mkString("\n")
+  }
 
   def gameboardToJason(gameBoard: Map[Int, GamefieldInterface[String]]): String = {
     Json.prettyPrint(
