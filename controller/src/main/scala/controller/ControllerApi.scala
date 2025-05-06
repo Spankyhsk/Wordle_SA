@@ -109,7 +109,11 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
         path("putVersuche"/ IntNumber){ versuche =>
           controller.setVersuche(versuche)
           complete(StatusCodes.OK, "Versuche set")
-        }
+        } ~
+          path("putGame"){
+            controller.putGame()
+            complete(StatusCodes.OK, "putGame")
+          }
       },
       patch {
         path("patchChangeState" / IntNumber) { state =>

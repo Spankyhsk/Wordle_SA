@@ -49,14 +49,18 @@ class TUI (controllerClient: ControllerClient)extends Observer:
       case "$undo"=>{
         controllerClient.putUndoMove()
       }
-      case "$save"=>{
-        println("Spielstand wurde gespeichert")
+      case "$lokalsave"=>{
+        println("Spielstand wurde lokal gespeichert")
         controllerClient.postGameSave()
       }
       case "$load"=>{
         println("Spielstand wird geladen")
         val message = controllerClient.getGameSave().toString
         println(message)
+      }
+      case "$superSave"=>{
+        println("Spielstand wurde online gespeichert")
+        controllerClient.putGame()
       }
       case "$switch"=>{
         newgame = true

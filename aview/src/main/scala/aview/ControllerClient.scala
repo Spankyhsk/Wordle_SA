@@ -206,6 +206,12 @@ class ControllerClient(baseurl:String)() {
 //      println(s"Fehler beim Rückgängigmachen des Zuges: ${response.status}")
 //    }
   }
+  
+  def putGame():Unit ={
+    val url = s"$baseurl/putGame"
+    val request = HttpRequest(HttpMethods.PUT, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+  }
 
 
 }

@@ -13,11 +13,13 @@ class BoardTable(tag:Tag) extends Table[(Option[Long],String, Long)](tag, "Game"
   def boardMap = column[String]("gameboard_data")
   def gameId = column[Long]("gameId")
 
-  def * = (id, boardMap,gameId)
-
-  def gameFK = foreignKey(
+  foreignKey(
     "fk_game", // Name des Constraints
     gameId, // Lokale Spalte (in OrderItems)
     TableQuery[GameTable] // Zieltabelle
   )(_.id, onDelete = ForeignKeyAction.Cascade)
+
+  def * = (id, boardMap,gameId)
+
+  
 }

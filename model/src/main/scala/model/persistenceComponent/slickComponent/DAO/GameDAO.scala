@@ -8,7 +8,7 @@ import slick.jdbc.PostgresProfile.api._
 
 class GameDAO(db:Database) extends DAOInterface[String, Long]{
   
-  private val gameTable = TableQuery[GameTable(_)]()
+  val gameTable = TableQuery(GameTable(_))
   
   def save(obj: String):Int={
     val games = (gameTable returning gameTable.map(_.gameId)) +=(

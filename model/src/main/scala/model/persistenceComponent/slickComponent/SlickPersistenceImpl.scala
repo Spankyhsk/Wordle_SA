@@ -5,13 +5,14 @@ import model.persistenceComponent.PersistenceInterface
 import model.persistenceComponent.slickComponent.DAO.{BoardDAO, GameDAO, MechDAO, ModeDAO}
 import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
 import slick.jdbc.JdbcBackend.Database
+import slick.jdbc.PostgresProfile.api._
 import slick.lifted.TableQuery
 import scala.concurrent.ExecutionContext.Implicits.global
 import model.persistenceComponent.entity.{ModeData,MechData,BoardData}
 
 import scala.util.{Failure, Success}
 
-class SlickPersistenceImpl(game: GameInterface) extends PersistenceInterface{
+class SlickPersistenceImpl() extends PersistenceInterface{
 
   /**
    * Hier muss alles hin für die Datenbank verbindung, setup und weiteres
@@ -70,7 +71,7 @@ class SlickPersistenceImpl(game: GameInterface) extends PersistenceInterface{
     val gameId = GameDAO(database).save("")
     ModeDAO(database).save(new ModeData(gameId, game.getGamemode().getTargetword(), game.getGamemode().getLimit()))
     MechDAO(database).save(new MechData(gameId, game.getGamemech().getWinningBoard(), game.getGamemech().getN()))
-    BoardDAO(database).save(new BoardDate(gameId, game.getGamefield().getMap()))
+    BoardDAO(database).save(new BoardData(gameId, game.getGamefield().getMap()))
     println("Database save Game")
     gameId
   }

@@ -75,4 +75,12 @@ trait ControllerInterface extends Observable{
 
   def load():String
   
+  //==========================================================
+  
+            //Persistence
+  
+  //==========================================================
+  
+  def putGame():Unit
+  
 }
