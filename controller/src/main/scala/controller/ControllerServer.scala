@@ -12,10 +12,7 @@ object ControllerServer {
     val gameClient = new GameClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082") + "/model/game")
     val fileClient = new FileIOClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082") + "/model/fileIO")
     val observerClient = new ObserverClient(sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + "/ui")
-    val gameClient = new GameClient("http://model-service:8082/model/game")
-    val fileClient = new FileIOClient("http://model-service:8082/model/fileIO")
-    val observerClient = new ObserverClient("http://aview-service:8080/ui")
-    val persistenceClient = new PersistenceClient("http://model-service:8082/persistence")
+    val persistenceClient = new PersistenceClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082")+ "model/persistence")
 
     //Controller erzeugen
     given controller: ControllerInterface = new controll(gameClient, fileClient, observerClient, persistenceClient)
