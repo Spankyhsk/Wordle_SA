@@ -14,12 +14,15 @@ import model.Game
 import model.*
 import model.FileIOComponent.FileIOInterface
 import model.persistenceComponent.PersistenceInterface
+import model.persistenceComponent.slickComponent.SlickPersistenceImpl
 
 class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface, var db:PersistenceInterface){
   
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(system)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+
+  val slickPersistence = new SlickPersistenceImpl()
 
   val route: Route = pathPrefix("model") {
     concat(
@@ -124,6 +127,26 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface, var db
     path("fileIO" / "load") {
       get {
         val result = fileIO.load(game)
+        complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
+      }
+    },
+    path("dao" / "loadDB") { gameId =>
+      get {
+        val result = slickPersistence.load(gameId, game)
+        complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
+      }
+    },
+    path("dao" / "saveDB") { name =>
+      post {
+        slickPersistence.save(game, name)
+        complete {
+          "Spiel wurde gespeichert."
+        }
+      }
+    },
+    path("dao" / "search") {
+      get {
+        val result = slickPersistence.search()
         complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
       }
     },
