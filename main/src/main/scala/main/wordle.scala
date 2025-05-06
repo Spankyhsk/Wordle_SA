@@ -28,8 +28,6 @@ object wordle {
     }
   }
 
-  def log(msg: String): Unit = println(s"[${java.time.LocalTime.now}] $msg")
-
 
   def main(args:Array[String]): Unit = {
     //    val injector = Guice.createInjector(new WordleModuleJson)
@@ -43,28 +41,29 @@ object wordle {
 
     ModelApi() // Port 8082
     ControllerApi() // Port 8081
-    UIApi() //Port 8080
-
+    println("-------------------------------------------------------------------------------------------------")
+    if (!sys.env.getOrElse("RUNNING_IN_DOCKER", "false").toBoolean) {
+      println("Starte UIApi lokal in main...")
+      UIApi() //Port 8080
+    } else {
+      println("Starte UIApi NICHT - läuft im Docker bereits separat über UIServer...")
+    }
+    println("-------------------------------------------------------------------------------------------------")
     // Begrüßung über die API holen
-    val welcome = Await.result(callApi(HttpMethods.GET, "http://aview-service:8080/ui/tui"), 30.seconds)
+    val welcome = Await.result(callApi(HttpMethods.GET, sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + "/ui/tui"), 30.seconds)
     println(welcome)
-    log(s"Begrüßung erhalten: $welcome")
     while (true) {
       // Check auf neues Spiel
-      val newGameJson = Await.result(callApi(HttpMethods.GET, "http://aview-service:8080/ui/tui/getNewGame"), 30.seconds)
+      val newGameJson = Await.result(callApi(HttpMethods.GET, sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + "/ui/tui/getNewGame"), 30.seconds)
       val newGame = (Json.parse(newGameJson) \ "newGame").as[Boolean]
-      log(s"Antwort von /getNewGame: $newGameJson")
 
       if (newGame) {
-        val selectText = Await.result(callApi(HttpMethods.GET, "http://aview-service:8080/ui/tui/Select"), 30.seconds)
+        val selectText = Await.result(callApi(HttpMethods.GET, sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + "/ui/tui/Select"), 30.seconds)
         println(selectText)
-        log(s"Antwort von /Select: $selectText")
       }
 
-      log("Warte auf Benutzereingabe...")
       // Nutzerinput lesen
       val input = StdIn.readLine()
-      log(s"Benutzereingabe: $input")
 
       if (input == "$quit") {
         println("Spiel beendet.")
@@ -73,8 +72,7 @@ object wordle {
       }
 
       // Input an Server senden
-      val response = Await.result(callApi(HttpMethods.PUT, s"http://aview-service:8080/ui/tui/processInput/$input"), 30.seconds)
-      log(s"Antwort vom Server (input): $response")
+      val response = Await.result(callApi(HttpMethods.PUT, sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + s"/ui/tui/processInput/$input"), 30.seconds)
       //if (response.nonEmpty) println(response)
     }
   }

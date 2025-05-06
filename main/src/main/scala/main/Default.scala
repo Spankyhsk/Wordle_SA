@@ -26,7 +26,11 @@ object Default:
   // Controller
 //  val injector = Guice.createInjector(new WordleModuleJson)
 //  given ControllerInterface = injector.getInstance(classOf[ControllerInterface])
-  given ControllerInterface = new controll(new GameClient("http://model-service:8082/model/game"), new FileIOClient("http://model-service:8082/model/fileIO"), new ObserverClient("http://ui-service:8080/ui"))
+  given ControllerInterface = new controll(
+    new GameClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082") + "/model/game"),
+    new FileIOClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082") + "/model/fileIO"),
+    new ObserverClient(sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + "/ui")
+  )
 
   // Optional: Factory Methoden
 //  def createGame(): GameInterface = new Game(new GameMech(), new gameboard(), gamemode(1))
