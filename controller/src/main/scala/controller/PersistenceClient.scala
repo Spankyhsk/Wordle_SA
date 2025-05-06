@@ -39,7 +39,7 @@ class PersistenceClient(baseurl:String)() {
     val entity = Await.result(entityFuture, 30.seconds)
 
     val jsonResponse = Json.parse(entity.data.utf8String)
-    (jsonResponse \ "search").as[String] // Das "targetWord"-Feld extrahieren und zurückgeben
+    (jsonResponse \ "result").as[String] // Das "targetWord"-Feld extrahieren und zurückgeben
   }
 
 }

@@ -226,7 +226,7 @@ class ControllerClient(baseurl:String)() {
 
     val entity = Await.result(response.entity.toStrict(30.seconds), 30.seconds)
     val jsonResponse = Json.parse(entity.data.utf8String)
-    (jsonResponse \ "search").as[String]
+    (jsonResponse \ "message").as[String]
   }
 
 

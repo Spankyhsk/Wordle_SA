@@ -79,7 +79,7 @@ class ModeDAO(db:Database) extends DAOInterface[ModeData, Long]{
 
   def targetwordFromJson(targetword: String): Map[Int, String] = {
     val json: JsValue = Json.parse(targetword)
-    val result: JsResult[Map[Int, String]] = (json \ "winningBoard").validate[Map[Int, String]]
+    val result: JsResult[Map[Int, String]] = (json \ "TargetWord").validate[Map[Int, String]]
     result.get
   }
 }
