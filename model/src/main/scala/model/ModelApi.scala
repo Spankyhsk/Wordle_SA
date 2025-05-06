@@ -130,21 +130,16 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface, var db
         complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
       }
     },
-    path("dao" / "loadDB") { gameId =>
+    path("persistence" / "getGame" / LongNumber) { gameId =>
       get {
-        val result = slickPersistence.load(gameId, game)
-        complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
+        slickPersistence.load(gameId, game)
+        complete(
+          StatusCodes.OK,
+          HttpEntity(ContentTypes.`application/json`, Json.obj("message" -> "Spiel wurde geladen").toString())
+        )
       }
     },
-    path("dao" / "saveDB") { name =>
-      post {
-        slickPersistence.save(game, name)
-        complete {
-          "Spiel wurde gespeichert."
-        }
-      }
-    },
-    path("dao" / "search") {
+    path("persistence" / "search") {
       get {
         val result = slickPersistence.search()
         complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))

@@ -71,6 +71,10 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
           val result = controller.load()
           complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("message" -> result).toString()))
         } ~
+        path("search") {
+          val result = controller.search()
+          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("message" -> result).toString()))
+        } ~
         path("getGameBoard") {
           val result = controller.toString
           complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("gameboard" -> result).toString()))
@@ -110,6 +114,10 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
           controller.setVersuche(versuche)
           complete(StatusCodes.OK, "Versuche set")
         } ~
+          path("getGame" / LongNumber) { gameId =>
+            controller.getGame(gameId)
+            complete(StatusCodes.OK, "getGame")
+          } ~
           path("putGame"/ Segment){ name =>
             controller.putGame(name)
             complete(StatusCodes.OK, "putGame")

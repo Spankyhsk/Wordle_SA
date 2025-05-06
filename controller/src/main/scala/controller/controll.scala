@@ -148,6 +148,20 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient, observerCli
     message
   }
 
+  def getGame(gameId: Long): Unit = {
+    val message = persistenceClient.getGame(gameId)
+    notifyObservers(Event.Move)
+    observerClient.triggerEvent(Event.Move)
+    message
+  }
+
+  def search(): String = {
+    val message = persistenceClient.search()
+    notifyObservers(Event.Move)
+    observerClient.triggerEvent(Event.Move)
+    message
+  }
+
   //============================================================================
 
       //Persistence

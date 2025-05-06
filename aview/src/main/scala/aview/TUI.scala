@@ -3,6 +3,7 @@ package aview
 import controller.ControllerInterface
 import util.{Event, Observer}
 
+import scala.io.StdIn
 import scala.util.{Failure, Success, Try}
 
 
@@ -58,9 +59,23 @@ class TUI (controllerClient: ControllerClient)extends Observer:
         println("Spielstand wurde lokal gespeichert")
         controllerClient.postGameSave()
       }
+      case "$SaveDB"=>{
+        println("Gib Namen ein:")
+        val name = Option(StdIn.readLine()).getOrElse("Unbekannt")
+        saveGame(name)
+      }
+      case "LoadDB"=>{
+        println("Gib die ID ein:")
+        val gameID = Option(StdIn.readLine()).getOrElse("Unbekannt")
+        controllerClient.getGame(gameID)
+      }
       case "$load"=>{
         println("Spielstand wird geladen")
         val message = controllerClient.getGameSave().toString
+        println(message)
+      }
+      case "$search"=>{
+        val message = controllerClient.search().toString
         println(message)
       }
       case "$switch"=>{

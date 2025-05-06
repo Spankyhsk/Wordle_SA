@@ -213,6 +213,20 @@ class ControllerClient(baseurl:String)() {
     val response = Await.result(Http().singleRequest(request), 30.seconds)
   }
 
+  def getGame(gameId:Long): Unit = {
+    val url = s"$baseurl/getGame/$gameId"
+    val request = HttpRequest(HttpMethods.PUT, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+  }
+
+  def search(): Unit = {
+    val url = s"$baseurl/search"
+    val request = HttpRequest(HttpMethods.GET, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+  }
+  
+  
+
 
 }
 
