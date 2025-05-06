@@ -64,7 +64,7 @@ class TUI (controllerClient: ControllerClient)extends Observer:
         val name = Option(StdIn.readLine()).getOrElse("Unbekannt")
         saveGame(name)
       }
-      case "LoadDB"=>{
+      case "$LoadDB"=>{
         println("Gib die ID ein:")
         val gameID = Option(StdIn.readLine()).getOrElse("Unbekannt").toLong
         controllerClient.getGame(gameID)

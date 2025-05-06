@@ -219,13 +219,17 @@ class ControllerClient(baseurl:String)() {
     val response = Await.result(Http().singleRequest(request), 30.seconds)
   }
 
-  def search(): Unit = {
+  def search(): String = {
     val url = s"$baseurl/search"
     val request = HttpRequest(HttpMethods.GET, uri = url)
     val response = Await.result(Http().singleRequest(request), 30.seconds)
+
+    val entity = Await.result(response.entity.toStrict(30.seconds), 30.seconds)
+    val jsonResponse = Json.parse(entity.data.utf8String)
+    (jsonResponse \ "search").as[String]
   }
-  
-  
+
+
 
 
 }
