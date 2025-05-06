@@ -27,7 +27,20 @@ class BoardDAO(db:Database) extends DAOInterface[BoardData, Long]{
     Await.result(resultFuture, 10.seconds)
   }
 
-  override def findAll(): Seq[BoardData] = ???
+  //wird wahrscheinlich nie benötigt
+  override def findAll(): Seq[BoardData] = {
+    val query = for {
+      board <- boardTable
+    } yield {
+      (board.gameId, board.boardMap)
+    }
+    val resultFuture = db.run(query.result)
+    val resultMech: Seq[(Long, String)] = Await.result(resultFuture, 10.seconds)
+    val boardSeq: Seq[BoardData] = resultMech.map { case (gameId, boardMap) =>
+      BoardData(gameId, boardMap)
+    }
+    boardSeq
+  }
 
   override def findById(id: Long): BoardData = {
     val query = for {
@@ -44,9 +57,24 @@ class BoardDAO(db:Database) extends DAOInterface[BoardData, Long]{
     BoardSeq.head
   }
 
-  override def update(id: Long, obj: BoardData): Unit = ???
+  //wird aktuell nicht gebraucht
+  override def update(id: Long, obj: BoardData): Unit = {
+    val query = boardTable
+      .filter(_.gameId === id)
+      .map(board => (board.boardMap))
+      .update((obj.boardMap))
 
-  override def delete(id: Long): Unit = ???
+    val resultFuture = db.run(query)
+  }
+
+  //Darf nicht genutzt werden
+  override def delete(id: Long): Unit = {
+    val query = boardTable
+      .filter(_.boardId === id)
+      .delete
+
+    val resultFuture = db.run(query)
+  }
 
   
 }

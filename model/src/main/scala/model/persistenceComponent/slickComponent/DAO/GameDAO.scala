@@ -35,9 +35,37 @@ class GameDAO(db:Database) extends DAOInterface[String, Long]{
     gameSeq
   }
 
-  override def findById(id: Long): String = ???
+  //Wird vermutlich nie benötigt
+  override def findById(id: Long): String = {
+    val query = for {
+      game <-  gameTable if game.gameId === id
+    }yield{
+      (game.name)
+    }
+    val resultFuture = db.run(query.result)
+    val resultGame: Seq[String] = Await.result(resultFuture, 5.seconds)
+    val gameSeq: Seq[String] = resultGame.map{case (name) =>
+      name
+    }
+    gameSeq.head
+  }
 
-  override def update(id: Long, obj: String): Unit = ???
+  //wird aktuell nicht gebraucht
+  override def update(id: Long, obj: String): Unit = {
+    val query = gameTable
+    .filter(_.gameId === id)
+    .map(game => (game.name))
+    .update(obj)
+    
+    val resultFuture = db.run(query)
+  }
 
-  override def delete(id: Long): Unit = ???
+  //wird aktuell nicht gebraucht
+  override def delete(id: Long): Unit = {
+    val query = gameTable
+    .filter(_.gameId === id)
+    .delete
+    
+    val resultFuture =db.run(query)
+  }
 }
