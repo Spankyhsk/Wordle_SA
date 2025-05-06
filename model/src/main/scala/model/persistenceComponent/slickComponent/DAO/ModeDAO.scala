@@ -6,28 +6,31 @@ import model.persistenceComponent.slickComponent.ModeTable
 import slick.jdbc.JdbcBackend.Database
 import slick.lifted.TableQuery
 import slick.jdbc.PostgresProfile.api._
+import scala.concurrent.duration.*
+import scala.concurrent.Await
 
 class ModeDAO(db:Database) extends DAOInterface[ModeData, Long]{
 
   private val modeTable = TableQuery(ModeTable(_))
 
-  def save(obj: ModeData):Long={
-    val mode = (modeTable returning modeTable.map(_.id)) +=(
-      None,
+  override def save(obj: ModeData):Long={
+    val insertQuery = (modeTable returning modeTable.map(_.modeId)) +=(
+      0L,
       obj.targetWordMapToJson(),
       obj.limit,
       obj.gameId
     )
-    val resultFuture = db.run(mode)
+    val resultFuture = db.run(insertQuery)
 
-    mode
+    Await.result(resultFuture, 10.seconds)
+    
   }
 
-  def findAll(): Seq[ModeData]
+  override def findAll(): Seq[ModeData] = ???
 
-  def findById(id: Long): ModeData
+  override def findById(id: Long): ModeData = ???
 
-  def update(id: Long, obj: ModeData): Unit
+  override def update(id: Long, obj: ModeData): Unit = ???
 
-  def delete(id: Long): Unit
+  override def delete(id: Long): Unit = ???
 }

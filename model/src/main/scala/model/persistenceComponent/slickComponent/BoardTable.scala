@@ -8,18 +8,18 @@ import slick.model.ForeignKeyAction
 import model.persistenceComponent.slickComponent.GameTable
 
 
-class BoardTable(tag:Tag) extends Table[(Option[Long],String, Long)](tag, "Game"){
-  def id = column[Option[Long]]("boardId", O.PrimaryKey, O.AutoInc)
+class BoardTable(tag:Tag) extends Table[(Long,String, Long)](tag, "Board"){
+  def boardId = column[Long]("boardId", O.PrimaryKey, O.AutoInc)
   def boardMap = column[String]("gameboard_data")
   def gameId = column[Long]("gameId")
 
-  foreignKey(
+  def gameFk =foreignKey(
     "fk_game", // Name des Constraints
     gameId, // Lokale Spalte (in OrderItems)
     TableQuery[GameTable] // Zieltabelle
-  )(_.id, onDelete = ForeignKeyAction.Cascade)
+  )(_.gameId, onDelete = ForeignKeyAction.Cascade)
 
-  def * = (id, boardMap,gameId)
+  def * = (boardId, boardMap,gameId)
 
   
 }

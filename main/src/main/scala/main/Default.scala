@@ -7,6 +7,8 @@ import model.FileIOComponent.{FileIOInterface, FileIOJSON}
 import model.gamefieldComponent.{GamefieldInterface, gameboard}
 import model.gamemechComponent.{GameMech, gamemechInterface}
 import model.gamemodeComponnent.{GamemodeInterface, gamemode}
+import model.persistenceComponent.PersistenceInterface
+import model.persistenceComponent.slickComponent.SlickPersistenceImpl
 
 
 
@@ -21,6 +23,8 @@ object Default:
 
   // FileIO
   given FileIOInterface = new FileIOJSON()
+  
+  given PersistenceInterface = new SlickPersistenceImpl()
 
 
   // Controller
@@ -29,7 +33,8 @@ object Default:
   given ControllerInterface = new controll(
     new GameClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082") + "/model/game"),
     new FileIOClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082") + "/model/fileIO"),
-    new ObserverClient(sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + "/ui")
+    new ObserverClient(sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + "/ui"),
+    new PersistenceClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082")+ "/model/persistence")
   )
 
   // Optional: Factory Methoden

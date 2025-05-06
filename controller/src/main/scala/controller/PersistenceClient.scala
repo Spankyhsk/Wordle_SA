@@ -18,6 +18,6 @@ class PersistenceClient(baseurl:String)() {
   def putGame():Unit ={
     val url = s"$baseurl/putGame"
     val request = HttpRequest(HttpMethods.PUT, uri = url) // PUT für die "save"-Aktion
-    Await.result(Http().singleRequest(request), 5.seconds) // Warte auf die Antwort, aber ignoriere sie
+    Await.result(Http().singleRequest(request), 30.seconds) // Warte auf die Antwort, aber ignoriere sie
   }
 }
