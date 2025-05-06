@@ -12,13 +12,13 @@ class MechTable(tag:Tag) extends Table[(Long, String, Int, Long)](tag, "Mech"){
 
   def mechId = column[Long]("mechId", O.PrimaryKey, O.AutoInc)
 
-  def targetword = column[String]("winningboard_data")
+  def winningboard = column[String]("winningboard_data")
 
-  def limit = column[Int]("versuche")
+  def versuche = column[Int]("versuche")
 
   def gameId = column[Long]("gameId")
 
-  def * = (mechId, targetword, limit, gameId)
+  def * = (mechId, winningboard, versuche, gameId)
 
   // Fremdschlüssel definieren
   def gameFK = foreignKey(

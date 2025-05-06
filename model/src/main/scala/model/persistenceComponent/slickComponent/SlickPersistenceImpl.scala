@@ -1,14 +1,17 @@
 package model.persistenceComponent.slickComponent
 
 import model.GameInterface
+import model.gamefieldComponent.GamefieldInterface
 import model.persistenceComponent.PersistenceInterface
 import model.persistenceComponent.slickComponent.DAO.{BoardDAO, GameDAO, MechDAO, ModeDAO}
 import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
 import slick.jdbc.JdbcBackend.Database
-import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.PostgresProfile.api.*
 import slick.lifted.TableQuery
+
 import scala.concurrent.ExecutionContext.Implicits.global
-import model.persistenceComponent.entity.{ModeData,MechData,BoardData}
+import model.persistenceComponent.entity.{BoardData, MechData, ModeData}
+import play.api.libs.json.{JsArray, JsObject, JsString, Json}
 
 import scala.util.{Failure, Success}
 
@@ -72,12 +75,67 @@ class SlickPersistenceImpl() extends PersistenceInterface{
     val gameId = GameDAO(database).save(name)
     ModeDAO(database).save(new ModeData(gameId, game.getGamemode().getTargetword(), game.getGamemode().getLimit()))
     MechDAO(database).save(new MechData(gameId, game.getGamemech().getWinningBoard(), game.getGamemech().getN()))
-    BoardDAO(database).save(new BoardData(gameId, game.getGamefield().getMap()))
+    BoardDAO(database).save(new BoardData(gameId, gameboardToJason(game.getGamefield().getMap()) ))
     println("Database save Game")
     gameId
   }
 
   override def load(gameId:Long, game: GameInterface): Unit = {
+    val mech = MechDAO(database).findById(gameId)
+    mech.winningBoard.size match {
+      case 1 =>
+        game.changeState(1)
+      case 2 =>
+        game.changeState(2)
+      case 4 =>
+        game.changeState(3)
+    }
     
+    game.setWinningboard(mech.winningBoard)
+    game.setN(mech.versuche)
+    
+    val board = BoardDAO(database).findById(gameId)
+    game.setMap(gameboardFromJason(board.boardMap))
+    
+    val mode = ModeDAO(database).findById(gameId)
+    game.setTargetWord(mode.targetWordMap)
+    game.setLimit(mode.limit)
+  }
+
+  override def search(): String = ???
+
+  def gameboardToJason(gameBoard: Map[Int, GamefieldInterface[String]]): String = {
+    Json.prettyPrint(
+      Json.obj(
+        "gameboard" -> Json.toJson(
+          for {
+            key <- 1 until gameBoard.size + 1
+          } yield {
+            Json.obj(
+              "key" -> key,
+              "gamefield" -> gameBoard(key).getMap()
+            )
+          }
+        )
+      ))
+  }
+
+  def gameboardFromJason(gameboard: String): Map[Int, Map[Int, String]] = {
+
+    val jsValue = Json.parse(gameboard)
+
+    val gameboardArray = (jsValue \ "gameboard").as[JsArray]
+
+    gameboardArray.value.map { entry =>
+      val key = (entry \ "key").as[Int]
+
+      val gamefieldJsObj = (entry \ "gamefield").as[JsObject]
+      val gamefieldMap: Map[Int, String] = gamefieldJsObj.fields.map {
+        case (k, JsString(v)) => k.toInt -> v
+        case (k, v) => throw new RuntimeException(s"Unerwarteter Wert für $k: $v")
+      }.toMap
+
+      key -> gamefieldMap
+    }.toMap
   }
 }
