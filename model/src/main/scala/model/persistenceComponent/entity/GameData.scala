@@ -1,3 +1,3 @@
 package model.persistenceComponent.entity
 
-case class GameData(gameId: Option[Long] = None)
+case class GameData(gameId: Option[Long] = None, name:String)

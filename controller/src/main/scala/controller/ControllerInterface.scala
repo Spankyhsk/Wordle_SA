@@ -81,6 +81,6 @@ trait ControllerInterface extends Observable{
   
   //==========================================================
   
-  def putGame():Unit
+  def putGame(name:String):Unit
   
 }

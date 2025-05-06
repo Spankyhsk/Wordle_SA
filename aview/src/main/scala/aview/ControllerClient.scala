@@ -207,8 +207,8 @@ class ControllerClient(baseurl:String)() {
 //    }
   }
   
-  def putGame():Unit ={
-    val url = s"$baseurl/putGame"
+  def putGame(name:String):Unit ={
+    val url = s"$baseurl/putGame/$name"
     val request = HttpRequest(HttpMethods.PUT, uri = url)
     val response = Await.result(Http().singleRequest(request), 30.seconds)
   }

@@ -37,6 +37,11 @@ class TUI (controllerClient: ControllerClient)extends Observer:
         1
     }
   }
+  
+  def saveGame(name:String): Unit = {
+    println("Spielstand wurde online gespeichert")
+    controllerClient.putGame(name)
+  }
 
 
 
@@ -57,10 +62,6 @@ class TUI (controllerClient: ControllerClient)extends Observer:
         println("Spielstand wird geladen")
         val message = controllerClient.getGameSave().toString
         println(message)
-      }
-      case "$superSave"=>{
-        println("Spielstand wurde online gespeichert")
-        controllerClient.putGame()
       }
       case "$switch"=>{
         newgame = true

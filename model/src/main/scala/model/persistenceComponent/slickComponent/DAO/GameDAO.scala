@@ -15,7 +15,7 @@ class GameDAO(db:Database) extends DAOInterface[String, Long]{
   val gameTable = TableQuery(GameTable(_))
 
   override def save(obj: String):Long={
-    val insertQuery = (gameTable returning gameTable.map(_.gameId)) += GameData(None)
+    val insertQuery = (gameTable returning gameTable.map(_.gameId)) += GameData(None, obj)
     val resultFuture = db.run(insertQuery)
     Await.result(resultFuture, 10.seconds)
   }

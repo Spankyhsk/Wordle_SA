@@ -15,8 +15,8 @@ class PersistenceClient(baseurl:String)() {
   implicit val materializer: Materializer = Materializer(system)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
   
-  def putGame():Unit ={
-    val url = s"$baseurl/putGame"
+  def putGame(name:String):Unit ={
+    val url = s"$baseurl/putGame/$name"
     val request = HttpRequest(HttpMethods.PUT, uri = url) // PUT für die "save"-Aktion
     Await.result(Http().singleRequest(request), 30.seconds) // Warte auf die Antwort, aber ignoriere sie
   }

@@ -110,8 +110,8 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
           controller.setVersuche(versuche)
           complete(StatusCodes.OK, "Versuche set")
         } ~
-          path("putGame"){
-            controller.putGame()
+          path("putGame"/ Segment){ name =>
+            controller.putGame(name)
             complete(StatusCodes.OK, "putGame")
           }
       },

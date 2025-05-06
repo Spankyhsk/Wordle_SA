@@ -67,9 +67,9 @@ class SlickPersistenceImpl() extends PersistenceInterface{
     }
   }
 
-  override def save(game: GameInterface): Long = {
+  override def save(game: GameInterface, name:String): Long = {
     //GameDao
-    val gameId = GameDAO(database).save("")
+    val gameId = GameDAO(database).save(name)
     ModeDAO(database).save(new ModeData(gameId, game.getGamemode().getTargetword(), game.getGamemode().getLimit()))
     MechDAO(database).save(new MechData(gameId, game.getGamemech().getWinningBoard(), game.getGamemech().getN()))
     BoardDAO(database).save(new BoardData(gameId, game.getGamefield().getMap()))
@@ -78,6 +78,6 @@ class SlickPersistenceImpl() extends PersistenceInterface{
   }
 
   override def load(gameId:Long, game: GameInterface): Unit = {
-
+    
   }
 }

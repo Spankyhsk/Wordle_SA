@@ -70,9 +70,17 @@ object wordle {
         system.terminate()
         return
       }
+      
+      if(input == "$OnlineSave"){
+        println("Gib Namen ein:")
+        val name = Option(StdIn.readLine()).getOrElse("Unbekannt")
+        val response = Await.result(callApi(HttpMethods.PUT, sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + s"/ui/tui/saveGame/$name"), 30.seconds)
 
-      // Input an Server senden
-      val response = Await.result(callApi(HttpMethods.PUT, sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + s"/ui/tui/processInput/$input"), 30.seconds)
+      }else{
+        // Input an Server senden
+        val response = Await.result(callApi(HttpMethods.PUT, sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + s"/ui/tui/processInput/$input"), 30.seconds)
+      }
+
       //if (response.nonEmpty) println(response)
     }
   }

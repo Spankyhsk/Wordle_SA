@@ -147,9 +147,9 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface, var db
           }
         }
       },
-      path("persistence"/"putGame"){
+      path("persistence"/"putGame"/ Segment){ name =>
         put{
-          db.save(game)
+          db.save(game, name)
           complete(StatusCodes.OK)
         }
       }

@@ -154,8 +154,8 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient, observerCli
 
   //============================================================================
 
-  def putGame():Unit={
-    persistenceClient.putGame()
+  def putGame(name:String):Unit={
+    persistenceClient.putGame(name)
     observerClient.triggerEvent(Event.Move)
   }
 }

@@ -30,7 +30,7 @@ class UIApi()() extends Observable{
         // Route für den GET-Endpunkt "tui"
         path("tui") {
           get {
-            complete("Willkommen zu Wordle\nBefehle\n$quit := Spiel beenden, $save := Speichern, $load := Laden, $switch := Schwierigkeiten verändern")
+            complete("Willkommen zu Wordle\nBefehle\n$quit := Spiel beenden, $save := Speichern, $load := Laden, $switch := Schwierigkeiten verändern, $OnlineSave := Online Speichern")
           }
         },
 
@@ -55,6 +55,13 @@ class UIApi()() extends Observable{
           get {
             complete("Gamemode aussuchen: \n1:= leicht\n2:= mittel\n3:= schwer")
           }
+        },
+        path("tui"/ "saveGame" / Segment){ name =>
+          put{
+            TUI.saveGame(name)
+            complete(StatusCodes.OK)
+          }
+          
         },
         path("event") {
           post{
