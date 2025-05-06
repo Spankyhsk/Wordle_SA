@@ -28,7 +28,20 @@ class ModeDAO(db:Database) extends DAOInterface[ModeData, Long]{
     
   }
 
-  override def findAll(): Seq[ModeData] = ???
+  //Werden wahrscheinlich nie benötigt werden
+  override def findAll(): Seq[ModeData] = {
+    val query = for{
+      mode <- modeTable
+    }yield{
+      (mode.gameId, mode.targetword, mode.limit)
+    }
+    val resultFuture = db.run(query.result)
+    val resultMech: Seq[(Long, String, Int)] = Await.result(resultFuture, 10.seconds)
+    val modeSeq: Seq[ModeData] = resultMech.map{case (gameId, targetword, limit) =>
+      ModeData(gameId, targetwordFromJson(targetword), limit)
+    }
+    modeSeq
+  }
 
   override def findById(id: Long): ModeData = {
     val query = for {
@@ -45,9 +58,24 @@ class ModeDAO(db:Database) extends DAOInterface[ModeData, Long]{
     mechSeq.head
   }
 
-  override def update(id: Long, obj: ModeData): Unit = ???
+  //wird aktuell nicht gebraucht
+  override def update(id: Long, obj: ModeData): Unit = {
+    val query = modeTable
+      .filter(_.gameId === id)
+      .map(mode => (mode.targetword, mode.limit))
+      .update((obj.targetWordMapToJson(), obj.limit))
 
-  override def delete(id: Long): Unit = ???
+    val resultFuture = db.run(query)
+  }
+
+  //DARF NICHT genutzt werden
+  override def delete(id: Long): Unit = {
+    val query = modeTable
+      .filter(_.modeId === id)
+      .delete
+
+    val resultFuture = db.run(query)
+  }
 
   def targetwordFromJson(targetword: String): Map[Int, String] = {
     val json: JsValue = Json.parse(targetword)

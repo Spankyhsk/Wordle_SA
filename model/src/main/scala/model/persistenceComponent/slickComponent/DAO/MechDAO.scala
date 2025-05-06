@@ -26,7 +26,20 @@ class MechDAO(db:Database) extends DAOInterface[MechData, Long]{
     Await.result(resultFuture, 10.seconds)
   }
 
-  override def findAll(): Seq[MechData] = ???
+  //Werden wahrscheinlich nie benötigt werden
+  override def findAll(): Seq[MechData] = {
+    val query = for{
+      mech <- mechTable
+    }yield{
+      (mech.gameId, mech.winningboard, mech.versuche)
+    }
+    val resultFuture = db.run(query.result)
+    val resultMech: Seq[(Long, String, Int)] = Await.result(resultFuture, 10.seconds)
+    val mechSeq: Seq[MechData] = resultMech.map{case (gameId, winningboard, versuche) =>
+      MechData(gameId, winningBoardFromJson(winningboard), versuche)
+    }
+    mechSeq
+  }
 
   override def findById(id: Long): MechData = {
     val query = for {
@@ -36,16 +49,31 @@ class MechDAO(db:Database) extends DAOInterface[MechData, Long]{
     }
     
     val resultFuture = db.run(query.result)
-    val resultGame: Seq[(String, Int)] = Await.result(resultFuture, 5.seconds)
-    val mechSeq:Seq[MechData] = resultGame.map{ case(winningboard, versuche) =>
+    val resultMech: Seq[(String, Int)] = Await.result(resultFuture, 5.seconds)
+    val mechSeq:Seq[MechData] = resultMech.map{ case(winningboard, versuche) =>
       MechData(id, winningBoardFromJson(winningboard), versuche);
     }
     mechSeq.head
   }
 
-  override def update(id: Long, obj: MechData): Unit = ???
+  //wird aktuell nicht gebraucht
+  override def update(id: Long, obj: MechData): Unit = {
+    val query = mechTable
+    .filter(_.gameId === id)
+    .map(mech => (mech.winningboard, mech.versuche))
+    .update((obj.winningBoardTojson(), obj.versuche))
+    
+    val resultFuture = db.run(query)
+  }
 
-  override def delete(id: Long): Unit = ???
+  //DARF NICHT genutzt werden
+  override def delete(id: Long): Unit = {
+    val query = mechTable
+    .filter(_.mechId === id)
+    .delete
+    
+    val resultFuture = db.run(query)
+  }
   
   def winningBoardFromJson(winningboard:String):Map[Int, Boolean]={
     val json: JsValue = Json.parse(winningboard)
