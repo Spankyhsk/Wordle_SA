@@ -34,12 +34,12 @@ class PersistenceClient(baseurl:String)() {
     val request = HttpRequest(HttpMethods.GET, uri = url)
     val response = Await.result(Http().singleRequest(request), 30.seconds)
 
-    // Verarbeite die Antwort und extrahiere den "targetWord"-String
+    // sucht gameid und namen raus
     val entityFuture = response.entity.toStrict(30.seconds)
     val entity = Await.result(entityFuture, 30.seconds)
 
     val jsonResponse = Json.parse(entity.data.utf8String)
-    (jsonResponse \ "result").as[String] // Das "targetWord"-Feld extrahieren und zurückgeben
+    (jsonResponse \ "result").as[String] 
   }
 
 }

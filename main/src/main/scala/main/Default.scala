@@ -8,7 +8,8 @@ import model.gamefieldComponent.{GamefieldInterface, gameboard}
 import model.gamemechComponent.{GameMech, gamemechInterface}
 import model.gamemodeComponnent.{GamemodeInterface, gamemode}
 import model.persistenceComponent.PersistenceInterface
-import model.persistenceComponent.slickComponent.SlickPersistenceImpl
+//import model.persistenceComponent.slickComponent.SlickPersistenceImpl
+import model.persistenceComponent.mongodbComponent.MongoDBPersistenceImpl
 
 
 
@@ -24,7 +25,8 @@ object Default:
   // FileIO
   given FileIOInterface = new FileIOJSON()
   
-  given PersistenceInterface = new SlickPersistenceImpl()
+//  given PersistenceInterface = new SlickPersistenceImpl()
+  given PersistenceInterface = new MongoDBPersistenceImpl()
 
 
   // Controller

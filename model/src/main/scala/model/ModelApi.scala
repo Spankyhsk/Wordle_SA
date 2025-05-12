@@ -22,7 +22,6 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface, var db
   implicit val materializer: Materializer = Materializer(system)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
-  val slickPersistence = new SlickPersistenceImpl()
 
   val route: Route = pathPrefix("model") {
     concat(
@@ -132,7 +131,7 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface, var db
     },
     path("persistence" / "getGame" / LongNumber) { gameId =>
       get {
-        slickPersistence.load(gameId, game)
+        db.load(gameId, game)
         complete(
           StatusCodes.OK,
           HttpEntity(ContentTypes.`application/json`, Json.obj("message" -> "Spiel wurde geladen").toString())
@@ -141,7 +140,7 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface, var db
     },
     path("persistence" / "search") {
       get {
-        val result = slickPersistence.search()
+        val result = db.search()
         complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
       }
     },
