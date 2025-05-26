@@ -1,0 +1,73 @@
+{
+  "game" : {
+    "mech" : {
+      "winningboard" : {
+        "1" : false,
+        "2" : false,
+        "3" : false,
+        "4" : false
+      },
+      "Versuch" : 5
+    },
+    "board" : {
+      "gameboard" : [ {
+        "key" : 1,
+        "gamefield" : {
+          "5" : "?????",
+          "1" : "FISCH",
+          "6" : "?????",
+          "2" : "G\u001B[32mU\u001B[0mRK\u001B[33mE\u001B[0m",
+          "7" : "?????",
+          "3" : "\u001B[33mL\u001B[0mACHS",
+          "8" : "?????",
+          "4" : "B\u001B[33mE\u001B[0mRG\u001B[33mE\u001B[0m"
+        }
+      }, {
+        "key" : 2,
+        "gamefield" : {
+          "5" : "?????",
+          "1" : "FISCH",
+          "6" : "?????",
+          "2" : "\u001B[32mG\u001B[0mURK\u001B[33mE\u001B[0m",
+          "7" : "?????",
+          "3" : "\u001B[33mL\u001B[0m\u001B[32mA\u001B[0mCHS",
+          "8" : "?????",
+          "4" : "\u001B[33mB\u001B[0m\u001B[33mE\u001B[0mR\u001B[33mG\u001B[0m\u001B[33mE\u001B[0m"
+        }
+      }, {
+        "key" : 3,
+        "gamefield" : {
+          "5" : "?????",
+          "1" : "FISCH",
+          "6" : "?????",
+          "2" : "GU\u001B[32mR\u001B[0m\u001B[33mK\u001B[0m\u001B[32mE\u001B[0m",
+          "7" : "?????",
+          "3" : "L\u001B[32mA\u001B[0mCHS",
+          "8" : "?????",
+          "4" : "B\u001B[33mE\u001B[0m\u001B[32mR\u001B[0mG\u001B[32mE\u001B[0m"
+        }
+      }, {
+        "key" : 4,
+        "gamefield" : {
+          "5" : "?????",
+          "1" : "FISCH",
+          "6" : "?????",
+          "2" : "GURKE",
+          "7" : "?????",
+          "3" : "\u001B[33mL\u001B[0m\u001B[33mA\u001B[0mCHS",
+          "8" : "?????",
+          "4" : "\u001B[32mB\u001B[0mERGE"
+        }
+      } ]
+    },
+    "mode" : {
+      "TargetWord" : {
+        "1" : "NUDEL",
+        "2" : "GABEL",
+        "3" : "KARTE",
+        "4" : "BLATT"
+      },
+      "limit" : 8
+    }
+  }
+}
