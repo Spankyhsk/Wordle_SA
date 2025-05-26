@@ -57,14 +57,14 @@ class MongoDBPersistenceImpl() extends PersistenceInterface{
 
   @Override
   override def load(gameId: Long, game: GameInterface): Unit = {
+    println(s"gameId: $gameId")
     val gameEntity = GameDAO(db).findById(gameId)
-
     gameEntity.winningBoard.size match {
       case 1 =>
         game.changeState(1)
       case 2 =>
         game.changeState(2)
-      case 3 =>
+      case 4 =>
         game.changeState(3)
     }
 
