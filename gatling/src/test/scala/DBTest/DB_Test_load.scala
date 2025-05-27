@@ -44,10 +44,7 @@ class DB_Test_load extends Simulation {
     .exec(
       http("Load Game from DB")
         .put("/getGame/1")
-//        .check(
-//          status.saveAs("status_LoadToDB"),
-//          bodyString.saveAs("responseBody_LoadToDB")
-//        )
+        .check(status.is(200))
     )
 //    .exec { session =>
 //      println(s"Load to DB - Status: ${session("status_LoadToDB").asOption[Int].getOrElse(-1)}")
@@ -55,20 +52,50 @@ class DB_Test_load extends Simulation {
 //      session
 //    }
 
-	//setUp(scn.inject(atOnceUsers(1))).protocols(httpProtocol)
+  // ========== Testarten ==========
+
+  // 1. Load Test: moderate Steigerung bis normale Last
+  val loadTest = scn.inject(
+    nothingFor(5.seconds),
+    rampUsersPerSec(1).to(1000).during(60.seconds)
+  )
+
+  // 2. Stress Test: was passiert bei Überlast?
+  val stressTest = scn.inject(
+    rampUsersPerSec(1000).to(10000).during(30.seconds),
+    constantUsersPerSec(10000).during(30.seconds)
+  )
+
+  // 3. Volume Test: viele Daten (würde man mit verschiedenen Datensätzen erweitern)
+  val volumeTest = scn.inject(
+    constantUsersPerSec(500).during(30.seconds) // Simuliere viele Anfragen mit großen Datenmengen
+  )
+
+  // 4. Endurance Test: wie lange hält das System durch?
+  val enduranceTest = scn.inject(
+    constantUsersPerSec(100).during(1.hour)
+  )
+
+  // 5. Spike Test: plötzliche Lastspitze
+  val spikeTest = scn.inject(
+    nothingFor(5.seconds),
+    atOnceUsers(5000),
+    nothingFor(10.seconds),
+    atOnceUsers(10000)
+  )
+
+  // ========== SetUp ==========
+
   setUp(
-    setupScenario.inject(atOnceUsers(1)) // Setup-Szenario einmal ausführen
+    setupScenario.inject(atOnceUsers(1)) // Setup einmal ausführen
       .andThen(
-        scn.inject(
-          nothingFor(5.seconds),                        // kleine Wartezeit vor Start
-          rampUsersPerSec(1).to(1000).during(20.seconds),
-    //      constantUsersPerSec(1000) during(30.seconds)
-    //      atOnceUsers(500),                             // sofortiger Load-Schock
-    //      rampUsersPerSec(1000).to(10000).during(60.seconds),  // Ramp-up auf 10k/sec
-    //      constantUsersPerSec(10000).during(60.seconds),       // Haltephase mit 10k/sec
-    //      rampUsersPerSec(10000).to(20000).during(30.seconds), // weiterer Anstieg
-    //      constantUsersPerSec(20000).during(30.seconds)        // Endbelastung
-        )
+        // Hier den Test wähen der durchgeführt werden soll:
+
+        loadTest
+        // stressTest
+        // volumeTest
+        // enduranceTest
+        // spikeTest
       )
   ).protocols(httpProtocol)
 }

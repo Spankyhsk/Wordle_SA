@@ -22,50 +22,72 @@ class DB_Test_save extends Simulation {
     .exec(
       http("Change Game State")
         .patch("/patchChangeState/3")
-        .check(
-          status.saveAs("status_ChangeState"),
-          bodyString.saveAs("responseBody_ChangeState")
-        )
+        .check(status.is(200))
     )
     .exec(
       http("Load Game from Local")
         .get("/getGameSave")
-        .check(
-          status.saveAs("status_load_local"),
-          bodyString.saveAs("responseBody_load_local")
-        )
+        .check(status.is(200))
     )
     .exec(
       http("Save Game to DB")
         .put("/putGame/Test")
-        .check(
-          status.saveAs("status_saveToDB"),
-          bodyString.saveAs("responseBody_saveToDB")
-        )
+        .check(status.is(200))
     )
-    .exec { session =>
-      println(s"Change State - Status: ${session("status_ChangeState").asOption[Int].getOrElse(-1)}")
-      println(s"Change State - Body: ${session("responseBody_ChangeState").asOption[String].getOrElse("no body")}")
+//    .exec { session =>
+//      println(s"Change State - Status: ${session("status_ChangeState").asOption[Int].getOrElse(-1)}")
+//      println(s"Change State - Body: ${session("responseBody_ChangeState").asOption[String].getOrElse("no body")}")
+//
+//      println(s"Load Local - Status: ${session("status_load_local").asOption[Int].getOrElse(-1)}")
+//      println(s"Load Local - Body: ${session("responseBody_load_local").asOption[String].getOrElse("no body")}")
+//
+//      println(s"Save to DB - Status: ${session("status_saveToDB").asOption[Int].getOrElse(-1)}")
+//      println(s"Save to DB - Body: ${session("responseBody_saveToDB").asOption[String].getOrElse("no body")}")
+//      session
+//    }
 
-      println(s"Load Local - Status: ${session("status_load_local").asOption[Int].getOrElse(-1)}")
-      println(s"Load Local - Body: ${session("responseBody_load_local").asOption[String].getOrElse("no body")}")
+  // ========== Testarten ==========
 
-      println(s"Save to DB - Status: ${session("status_saveToDB").asOption[Int].getOrElse(-1)}")
-      println(s"Save to DB - Body: ${session("responseBody_saveToDB").asOption[String].getOrElse("no body")}")
-      session
-    }
+  // 1. Load Test: moderate Steigerung bis normale Last
+  val loadTest = scn.inject(
+    nothingFor(5.seconds),
+    rampUsersPerSec(1).to(1000).during(60.seconds)
+  )
 
-	//setUp(scn.inject(atOnceUsers(1))).protocols(httpProtocol)
+  // 2. Stress Test: was passiert bei Überlast?
+  val stressTest = scn.inject(
+    rampUsersPerSec(1000).to(10000).during(30.seconds),
+    constantUsersPerSec(10000).during(30.seconds)
+  )
+
+  // 3. Volume Test: viele Daten (würde man mit verschiedenen Datensätzen erweitern)
+  val volumeTest = scn.inject(
+    constantUsersPerSec(500).during(30.seconds) // Simuliere viele Anfragen mit großen Datenmengen
+  )
+
+  // 4. Endurance Test: wie lange hält das System durch?
+  val enduranceTest = scn.inject(
+    constantUsersPerSec(100).during(1.hour)
+  )
+
+  // 5. Spike Test: plötzliche Lastspitze
+  val spikeTest = scn.inject(
+    nothingFor(5.seconds),
+    atOnceUsers(5000),
+    nothingFor(10.seconds),
+    atOnceUsers(10000)
+  )
+
+  // ========== SetUp ==========
+
   setUp(
-    scn.inject(
-      nothingFor(5.seconds),                        // kleine Wartezeit vor Start
-      rampUsersPerSec(1).to(1000).during(20.seconds),
-//      constantUsersPerSec(1000) during(30.seconds)
-//      atOnceUsers(500),                             // sofortiger Load-Schock
-//      rampUsersPerSec(1000).to(10000).during(60.seconds),  // Ramp-up auf 10k/sec
-//      constantUsersPerSec(10000).during(60.seconds),       // Haltephase mit 10k/sec
-//      rampUsersPerSec(10000).to(20000).during(30.seconds), // weiterer Anstieg
-//      constantUsersPerSec(20000).during(30.seconds)        // Endbelastung
-    )
+    // Hier den Test wähen der durchgeführt werden soll:
+
+    loadTest
+    // stressTest
+    // volumeTest
+    // enduranceTest
+    // spikeTest
+
   ).protocols(httpProtocol)
 }
