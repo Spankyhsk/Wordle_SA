@@ -206,6 +206,30 @@ class ControllerClient(baseurl:String)() {
 //      println(s"Fehler beim Rückgängigmachen des Zuges: ${response.status}")
 //    }
   }
+  
+  def putGame(name:String):Unit ={
+    val url = s"$baseurl/putGame/$name"
+    val request = HttpRequest(HttpMethods.PUT, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+  }
+
+  def getGame(gameId:Long): Unit = {
+    val url = s"$baseurl/getGame/$gameId"
+    val request = HttpRequest(HttpMethods.PUT, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+  }
+
+  def search(): String = {
+    val url = s"$baseurl/search"
+    val request = HttpRequest(HttpMethods.GET, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+
+    val entity = Await.result(response.entity.toStrict(30.seconds), 30.seconds)
+    val jsonResponse = Json.parse(entity.data.utf8String)
+    (jsonResponse \ "message").as[String]
+  }
+
+
 
 
 }

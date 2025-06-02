@@ -18,8 +18,8 @@ class UIApi()() extends Observable{
   implicit val materializer: Materializer = Materializer(system)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
-  val TUI = new TUI(new ControllerClient("http://localhost:8081/controller"))
-  val GUISWING = new GUISWING(new ControllerClient("http://localhost:8081/controller"))
+  val TUI = new TUI(new ControllerClient(sys.env.getOrElse("CONTROLLER_URL", "http://localhost:8081") + "/controller"))
+  val GUISWING = new GUISWING(new ControllerClient(sys.env.getOrElse("CONTROLLER_URL", "http://localhost:8081") + "/controller"))
   add(TUI)
   add(GUISWING)
 
@@ -30,7 +30,7 @@ class UIApi()() extends Observable{
         // Route für den GET-Endpunkt "tui"
         path("tui") {
           get {
-            complete("Willkommen zu Wordle\nBefehle\n$quit := Spiel beenden, $save := Speichern, $load := Laden, $switch := Schwierigkeiten verändern")
+            complete("Willkommen zu Wordle\nBefehle\n$quit := Spiel beenden, $save := Speichern, $load := Laden, $switch := Schwierigkeiten verändern, $OnlineSave := Online Speichern")
           }
         },
 
@@ -56,6 +56,13 @@ class UIApi()() extends Observable{
             complete("Gamemode aussuchen: \n1:= leicht\n2:= mittel\n3:= schwer")
           }
         },
+        path("tui"/ "saveGame" / Segment){ name =>
+          put{
+            TUI.saveGame(name)
+            complete(StatusCodes.OK)
+          }
+          
+        },
         path("event") {
           post{
             entity(as[String]){ eventJson =>
@@ -73,7 +80,7 @@ class UIApi()() extends Observable{
 
 
   // Binde den Server an localhost:8080
-  val bindFuture = Http().newServerAt("localhost", 8080).bind(routes)
+  val bindFuture = Http().newServerAt("0.0.0.0", 8080).bind(routes)
 
   // Behandle das Future-Ergebnis von bind
   bindFuture.onComplete {

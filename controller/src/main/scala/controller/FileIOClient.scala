@@ -35,4 +35,6 @@ class FileIOClient(baseurl:String)() {
     (jsonResponse \ "result").as[String] // Das "result"-Feld extrahieren und zurückgeben
   }
 
+  
+
 }

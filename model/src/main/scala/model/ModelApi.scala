@@ -13,12 +13,15 @@ import scala.util.{Failure, Success}
 import model.Game
 import model.*
 import model.FileIOComponent.FileIOInterface
+import model.persistenceComponent.PersistenceInterface
+import model.persistenceComponent.slickComponent.SlickPersistenceImpl
 
-class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
+class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface, var db:PersistenceInterface){
   
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(system)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+
 
   val route: Route = pathPrefix("model") {
     concat(
@@ -126,6 +129,21 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
         complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
       }
     },
+    path("persistence" / "getGame" / LongNumber) { gameId =>
+      get {
+        db.load(gameId, game)
+        complete(
+          StatusCodes.OK,
+          HttpEntity(ContentTypes.`application/json`, Json.obj("message" -> "Spiel wurde geladen").toString())
+        )
+      }
+    },
+    path("persistence" / "search") {
+      get {
+        val result = db.search()
+        complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
+      }
+    },
       path("game"/"step"/IntNumber) { key =>
         post {
           entity(as[String]) { body =>
@@ -145,10 +163,16 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface){
             complete(StatusCodes.OK)
           }
         }
+      },
+      path("persistence"/"putGame"/ Segment){ name =>
+        put{
+          db.save(game, name)
+          complete(StatusCodes.OK)
+        }
       }
     )}
 
-  val bindFuture = Http().newServerAt("localhost", 8082).bind(route)
+  val bindFuture = Http().newServerAt("0.0.0.0", 8082).bind(route)
   // Behandle das Future-Ergebnis von bind
   bindFuture.onComplete {
     case Success(binding) =>

@@ -71,6 +71,10 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
           val result = controller.load()
           complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("message" -> result).toString()))
         } ~
+        path("search") {
+          val result = controller.search()
+          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("message" -> result).toString()))
+        } ~
         path("getGameBoard") {
           val result = controller.toString
           complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("gameboard" -> result).toString()))
@@ -109,7 +113,15 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
         path("putVersuche"/ IntNumber){ versuche =>
           controller.setVersuche(versuche)
           complete(StatusCodes.OK, "Versuche set")
-        }
+        } ~
+          path("getGame" / LongNumber) { gameId =>
+            controller.getGame(gameId)
+            complete(StatusCodes.OK, "getGame")
+          } ~
+          path("putGame"/ Segment){ name =>
+            controller.putGame(name)
+            complete(StatusCodes.OK, "putGame")
+          }
       },
       patch {
         path("patchChangeState" / IntNumber) { state =>
@@ -131,7 +143,7 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
   override def update(e: Event): Unit = ???
 
   // Binde den Server an localhost:8080
-  val bindFuture = Http().newServerAt("localhost", 8081).bind(routes)
+  val bindFuture = Http().newServerAt("0.0.0.0", 8081).bind(routes)
 
   // Behandle das Future-Ergebnis von bind
   bindFuture.onComplete {

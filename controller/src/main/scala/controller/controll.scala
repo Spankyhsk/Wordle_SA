@@ -6,7 +6,7 @@ import model.{Game, GameInterface}
 import util.Event.{Move, NEW, WIN}
 import util.{Event, Observable, UndoManager}
 
-case class controll (gameClient:GameClient, fileClient:FileIOClient, observerClient:ObserverClient)extends ControllerInterface with Observable {
+case class controll (gameClient:GameClient, fileClient:FileIOClient, observerClient:ObserverClient, persistenceClient: PersistenceClient)extends ControllerInterface with Observable {
 
 
   //============================================================================
@@ -148,12 +148,30 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient, observerCli
     message
   }
 
+  def getGame(gameId: Long): Unit = {
+    val message = persistenceClient.getGame(gameId)
+    notifyObservers(Event.Move)
+    observerClient.triggerEvent(Event.Move)
+    message
+  }
+
+  def search(): String = {
+    val message = persistenceClient.search()
+    notifyObservers(Event.Move)
+    observerClient.triggerEvent(Event.Move)
+    message
+  }
+
+  //============================================================================
+
+      //Persistence
+
+  //============================================================================
+
+  def putGame(name:String):Unit={
+    persistenceClient.putGame(name)
+    observerClient.triggerEvent(Event.Move)
+  }
 }
 
-//object controll:
-//  def apply(kind:String):controll ={
-//    kind match {
-//      case "XML" => controll(Game("norm"), new FileIOXML)
-//      case "JSON" => controll(Game("norm"), new FileIOJSON)
-//    }
-//  }
+

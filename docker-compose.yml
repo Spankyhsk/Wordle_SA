@@ -1,0 +1,104 @@
+services:
+  mongodb:
+    image: mongo
+    container_name: mongodb-wordle
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongodb
+      - MONGO_INITDB_ROOT_PASSWORD=mypassword123
+    networks:
+      - app-network
+
+  model:
+    build:
+      context: .
+      dockerfile: model/Dockerfile
+    container_name: model-service
+    ports:
+      - "8082:8082"   # model läuft auf Port 8082
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+    environment:
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_USERNAME=mongodb
+      - MONGO_PASSWORD=mypassword123
+      - MONGO_DB=mongo
+
+  controller:
+    build:
+      context: .
+      dockerfile: controller/Dockerfile
+    container_name: controller-service
+    ports:
+      - "8081:8081"   # controller läuft auf Port 8081
+    depends_on:
+      - model
+    networks:
+      - app-network
+    environment:
+      - MODEL_URL=http://model-service:8082
+      - AVIEW_URL=http://aview-service:8080
+
+  aview:
+    build:
+      context: .
+      dockerfile: aview/Dockerfile
+    container_name: aview-service
+    ports:
+      - "8080:8080"   # aview läuft auf Port 8080
+    depends_on:
+      - controller
+    networks:
+      - app-network
+    environment:
+      - CONTROLLER_URL=http://controller-service:8081
+      - RUNNING_IN_DOCKER=true
+      - DISPLAY=host.docker.internal:0
+
+  main:
+    build:
+      context: .
+      dockerfile: main/Dockerfile
+    container_name: wordle
+    stdin_open: true
+    tty: true
+    ports:
+      - "8085:8085"   # main läuft auf Port 8085
+    depends_on:
+      - model
+      - controller
+      - aview
+    networks:
+      - app-network
+    environment:
+      - MODEL_URL=http://model-service:8082
+      - CONTROLLER_URL=http://controller-service:8081
+      - AVIEW_URL=http://aview-service:8080
+      - RUNNING_IN_DOCKER=true
+      - DISPLAY=host.docker.internal:0
+
+  rest:
+    build:
+      context: .
+      dockerfile: rest/Dockerfile
+    container_name: rest-service
+    ports:
+      - "9000:9000"   # rest läuft auf Port 9000 (angenommen)
+    depends_on:
+      - model
+      - controller
+      - aview
+    networks:
+      - app-network
+    environment:
+      - MODEL_URL=http://model-service:8082
+      - CONTROLLER_URL=http://controller-service:8081
+      - AVIEW_URL=http://aview-service:8080
+
+networks:
+  app-network:
+    driver: bridge
