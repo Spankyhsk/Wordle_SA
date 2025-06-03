@@ -2,9 +2,8 @@ package model
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.Route
-import akka.stream.{ActorMaterializer, Materializer}
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
+import akka.stream.{ActorMaterializer, FlowShape, Materializer, UniformFanInShape, UniformFanOutShape}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, HttpRequest, StatusCodes}
 import akka.http.scaladsl.server.Directives.*
 import play.api.libs.json.{JsObject, JsString, Json}
 
@@ -16,163 +15,163 @@ import model.FileIOComponent.FileIOInterface
 import model.persistenceComponent.PersistenceInterface
 import model.persistenceComponent.slickComponent.SlickPersistenceImpl
 
+import akka.NotUsed
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.stream.scaladsl.GraphDSL.Builder
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source}
+
+import scala.concurrent.Future
+
 class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface, var db:PersistenceInterface){
   
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(system)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
+  // modelFlow: verarbeitet HttpRequest → gibt String zurück
+  private val modelFlow: Flow[HttpRequest, String, NotUsed] = Flow.fromGraph(GraphDSL.create() { implicit builder: Builder[NotUsed] =>
+    import GraphDSL.Implicits._
 
-  val route: Route = pathPrefix("model") {
-    concat(
-      path("game" / "count") {
-        get {
-          val result = game.count()
-          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("continue" -> result).toString()))
-        }
-      },
-      path("game" / "controllLength" / IntNumber) { guess =>
-        val result = game.controllLength(guess)
-        complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
-      },
-      path("game" / "controllRealWord"/ Segment) { guess =>
-        val result = game.controllRealWord(guess)
-        val jsonResponse = Json.obj("result" -> result)
-        complete(
-          HttpResponse(
-            StatusCodes.OK,
-            entity = HttpEntity(ContentTypes.`application/json`, Json.stringify(jsonResponse))
-          )
-        )
-      },
-      path("game" / "evaluateGuess"/ Segment) { guess =>
-        val result = game.evaluateGuess(guess)
-        val convertedMap = result.map{ case(k, v) => k.toString -> JsString(v) }
-        val json = JsObject(convertedMap)
-        complete(HttpEntity(ContentTypes.`application/json`, Json.stringify(json)))
-      },
-      path("game" / "areYouWinningSon" / Segment) { guess =>
-        val result = game.areYouWinningSon(guess)
-        val jsonResponse = Json.obj("won" -> result)
-        complete(
-          HttpResponse(
-            StatusCodes.OK,
-            entity = HttpEntity(ContentTypes.`application/json`, Json.stringify(jsonResponse))
-          )
-        )
-      },
-      path("game" / "createwinningboard") {
-        put {
+    // Broadcast: Teilt jeden eingehenden HttpRequest in zwei Pfade auf (z.B. für GET & PUT getrennt behandeln)
+    val broadcast: UniformFanOutShape[HttpRequest, HttpRequest] = builder.add(Broadcast[HttpRequest](2))
+    // Merge: Kombiniert die zwei Antwortpfade (GET und PUT) wieder zu einem gemeinsamen Stream
+    val merge: UniformFanInShape[String, String] = builder.add(Merge[String](2))
+
+    // GET-Anfragen behandeln (einfache Pfade → Antwort als HttpResponse generieren)
+    val getModelFlow = Flow[HttpRequest].map { request =>
+      println(s"[DEBUG] Eingehender GET-Request: ${request.uri.path}")
+      request.uri.path.toString match {
+        // Pfad-Matching: entscheidet anhand der URI, was im Model gemacht wird
+        case "/model/game/count" =>
+          HttpResponse(entity = Json.obj("continue" -> game.count()).toString)
+        case "/model/game/getN" =>
+          HttpResponse(entity = Json.obj("result" -> game.getN()).toString)
+        case "/model/game/toString" =>
+          HttpResponse(entity = Json.obj("gameboard" -> game.toString).toString)
+        case "/model/game/TargetwordToString" =>
+          HttpResponse(entity = Json.obj("targetWord" -> game.TargetwordToString()).toString)
+        case path if path.startsWith("/model/game/GuessTransform") =>
+          val query = request.uri.query()
+          val guess = query.get("guess").get
+          HttpResponse(entity = Json.obj("transformedGuess" -> game.GuessTransform(guess)).toString)
+        case path if path.startsWith("/model/game/controllLength") =>
+          val query = request.uri.query()
+          val length = query.get("length").get.toInt
+          HttpResponse(entity = Json.obj("result" -> game.controllLength(length)).toString)
+        case path if path.startsWith("/model/game/controllRealWord") =>
+          val query = request.uri.query()
+          val guess = query.get("guess").get
+          HttpResponse(entity = Json.obj("result" -> game.controllRealWord(guess)).toString)
+        case path if path.startsWith("/model/game/areYouWinningSon") =>
+          val query = request.uri.query()
+          val guess = query.get("guess").get
+          HttpResponse(entity = Json.obj("won" -> game.areYouWinningSon(guess)).toString)
+        case path if path.startsWith("/model/game/evaluateGuess") =>
+          val query = request.uri.query()
+          val guess = query.get("guess").get
+          val result = game.evaluateGuess(guess)
+          val convertedMap = result.map { case (k, v) => k.toString -> Json.toJsFieldJsValueWrapper(JsString(v)) }
+          HttpResponse(entity = Json.obj(convertedMap.toSeq: _*).toString)
+        case other =>
+          println(s"[WARN] Unbekannter GET-Pfad: $other")
+          HttpResponse(status = StatusCodes.NotFound, entity = s"Pfad nicht gefunden: $other")
+      }
+    }
+
+    // Wandelt HttpResponse (der GET-Antwort) in einen String um
+    val getResponseFlow = Flow[HttpResponse].mapAsync(1) { response =>
+      Unmarshal(response.entity).to[String]
+    }
+
+    // PUT-/POST-artige Requests (asynchrone Verarbeitung, z.B. JSON-Bodies lesen)
+    val putModelFlow = Flow[HttpRequest].mapAsync(1) { request =>
+      println(s"[DEBUG] Eingehender PUT/POST-Request: ${request.uri.path}")
+      request.uri.path.toString match {
+        case "/model/game/createwinningboard" =>
           game.createwinningboard()
-          complete(StatusCodes.OK)
-        }
-      },
-      path("game" / "setN" / IntNumber) { versuche =>
-        put {
-            game.setN(versuche)
-            complete(StatusCodes.OK)
-          }
-        },
-      path("game" / "getN") {
-        get {
-          val result = game.getN();
-          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
-        }
-      },
-      path("game"/ "GuessTransform"/ Segment){ guess =>
-        get {
-          val result = game.GuessTransform(guess)
-          val jsonResponse = Json.obj("transformedGuess" -> result)
-          complete(
-            HttpResponse(
-              StatusCodes.OK,
-              entity = HttpEntity(ContentTypes.`application/json`, Json.stringify(jsonResponse))
-            )
-          )
-        }
-      },
-      path("game" / "createGameboard") {
-        put {
+          Future.successful(HttpResponse(entity = "Winningboard wurde erstellt."))
+        case path if path.startsWith("/model/game/setN") =>
+          val query = request.uri.query()
+          val versuche = query.get("versuche").get.toInt
+          game.setN(versuche)
+          Future.successful(HttpResponse(entity = "Anzahl versuche wurde gesetzt."))
+        case "/model/game/createGameboard" =>
           game.createGameboard()
-          complete(StatusCodes.OK)
-        }
-      },
-      path("game" / "toString"){
-        get {
-          val result = game.toString
-          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("gameboard" -> result).toString()))
-        }
-      },
-      path("game" / "changeState" / IntNumber){ level =>
-        patch{
+          Future.successful(HttpResponse(entity = "Spielbrett wurde erstellt."))
+        case path if path.startsWith("/model/game/changeState") =>
+          val query = request.uri.query()
+          val level = query.get("level").get.toInt
           game.changeState(level)
-          complete(StatusCodes.OK)
-        }
-      },
-      path("game" / "TargetwordToString"){
-        get {
-          val result = game.TargetwordToString()
-          complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("targetWord" -> result).toString()))
-        }
-      },
-      path("fileIO" / "save") {
-      post {
-        fileIO.save(game)
-        complete {
-          "Spiel wurde gespeichert."
-        }
-      }
-    },
-    path("fileIO" / "load") {
-      get {
-        val result = fileIO.load(game)
-        complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
-      }
-    },
-    path("persistence" / "getGame" / LongNumber) { gameId =>
-      get {
-        db.load(gameId, game)
-        complete(
-          StatusCodes.OK,
-          HttpEntity(ContentTypes.`application/json`, Json.obj("message" -> "Spiel wurde geladen").toString())
-        )
-      }
-    },
-    path("persistence" / "search") {
-      get {
-        val result = db.search()
-        complete(StatusCodes.OK, HttpEntity(ContentTypes.`application/json`, Json.obj("result" -> result).toString()))
-      }
-    },
-      path("game"/"step"/IntNumber) { key =>
-        post {
-          entity(as[String]) { body =>
+          Future.successful(HttpResponse(entity = "Schwirigkeit/Status wurde geändert."))
+        case "/model/fileIO/save" =>
+          fileIO.save(game)
+          Future.successful(HttpResponse(entity = "Spiel wurde gespeichert."))
+        case "/model/fileIO/load" =>
+          val result = fileIO.load(game)
+          Future.successful(HttpResponse(entity = Json.obj("result" -> result).toString))
+        case path if path.startsWith("/model/persistence/putGame") =>
+          val query = request.uri.query()
+          val name = query.get("name").get
+          db.save(game, name)
+          Future.successful(HttpResponse(entity = "Spiel wurde gespeichert."))
+        case path if path.startsWith("/model/persistence/getGame") =>
+          val query = request.uri.query()
+          val gameId = query.get("gameId").get.toLong
+          db.load(gameId, game)
+          Future.successful(HttpResponse(entity = Json.obj("message" -> "Spiel wurde geladen").toString))
+        case "/model/persistence/search" =>
+          val result = db.search()
+          Future.successful(HttpResponse(entity = Json.obj("result" -> result).toString))
+        case path if path.startsWith("/model/game/step") =>
+          val query = request.uri.query()
+          val key = query.get("key").get.toInt
+          Unmarshal(request.entity).to[String].map { body =>
             val json = Json.parse(body)
             val receivedMap = json.as[Map[Int, String]]
             game.setRGameboard(key, receivedMap)
-            complete(StatusCodes.OK)
+            HttpResponse(StatusCodes.OK)
           }
-        }
-      },
-      path("game"/"undoStep"/IntNumber) { key =>
-        post {
-          entity(as[String]) { body =>
+        case path if path.startsWith("/model/game/undoStep") =>
+          val query = request.uri.query()
+          val key = query.get("key").get.toInt
+          Unmarshal(request.entity).to[String].map { body =>
             val json = Json.parse(body)
             val receivedMap = json.as[Map[Int, String]]
             game.undoStep(key, receivedMap)
-            complete(StatusCodes.OK)
+            HttpResponse(StatusCodes.OK)
           }
-        }
-      },
-      path("persistence"/"putGame"/ Segment){ name =>
-        put{
-          db.save(game, name)
-          complete(StatusCodes.OK)
-        }
+        case other =>
+          println(s"[WARN] Unbekannter PUT/POST-Pfad: $other")
+          Future.successful(HttpResponse(status = StatusCodes.NotFound, entity = s"Pfad nicht gefunden: $other"))
       }
-    )}
+    }
 
-  val bindFuture = Http().newServerAt("0.0.0.0", 8082).bind(route)
+    // Wie bei GET: extrahiere String-Body aus HttpResponse
+    val putResponseFlow = Flow[HttpResponse].mapAsync(1) { response =>
+      Unmarshal(response.entity).to[String]
+    }
+
+    // Verbinde die Komponenten
+    // GET-Pfad: erster Ausgang -> getModelFlow → getResponseFlow → merge.in(0)
+    broadcast.out(0) ~> getModelFlow ~> getResponseFlow ~> merge.in(0)
+
+    // PUT-Pfad: zweiter Ausgang -> putModelFlow → putResponseFlow → merge.in(1)
+    broadcast.out(1) ~> putModelFlow ~> putResponseFlow ~> merge.in(1)
+
+    // Rückgabe des Flows
+    FlowShape(broadcast.in, merge.out)
+  })
+
+  val bindFuture = Http().newServerAt("0.0.0.0", 8082).bind(
+    pathPrefix("model") {
+      extractRequest { request =>
+        complete(
+          Source.single(request).via(modelFlow).runWith(Sink.head).map(resp => resp)
+        )
+      }
+    }
+  )
+
   // Behandle das Future-Ergebnis von bind
   bindFuture.onComplete {
     case Success(binding) =>
