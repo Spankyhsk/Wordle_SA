@@ -2,30 +2,18 @@ package aview
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.Route
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
-import akka.http.scaladsl.server.Directives.*
 import play.api.libs.json.Json
 import util.{Event, Observable}
-
 import akka.stream.{ActorMaterializer, FlowShape, Materializer, UniformFanInShape, UniformFanOutShape}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives.*
-
-import akka.stream.scaladsl.GraphDSL.Builder
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.NotUsed
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
-
-
-import akka.stream.scaladsl.GraphDSL.Builder
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source}
-
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
 
