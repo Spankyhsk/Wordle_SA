@@ -17,14 +17,14 @@ class PersistenceClient(baseurl:String)() {
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
   def putGame(name: String): Unit = {
-    val url = s"$baseurl/putGame/$name"
+    val url = s"$baseurl/putGame?name=$name"
     val request = HttpRequest(HttpMethods.PUT, uri = url) // PUT für die "save"-Aktion
     Await.result(Http().singleRequest(request), 30.seconds) // Warte auf die Antwort, aber ignoriere sie
   }
 
 
   def getGame(gameId: Long): Unit = {
-    val url = s"$baseurl/getGame/$gameId"
+    val url = s"$baseurl/getGame?gameId=$gameId"
     val request = HttpRequest(HttpMethods.GET, uri = url) // PUT für die "save"-Aktion
     Await.result(Http().singleRequest(request), 30.seconds) // Warte auf die Antwort, aber ignoriere sie
   }
