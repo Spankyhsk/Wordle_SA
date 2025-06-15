@@ -3,6 +3,8 @@ import sbt.*
 
 val scala3Version = "3.3.1"
 val scalaFXVersion = "16.0.0-R24"
+val akkaVersion = "2.8.8"
+val alpakkaKafkaVersion = "4.0.2"
 
 ThisBuild / libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.19"
 ThisBuild / libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test"
@@ -37,7 +39,17 @@ lazy val model = project.in(file("model"))
   )
 
 lazy val util = project.in(file("util"))
-  .settings(scalaVersion := scala3Version)
+  .settings(
+    scalaVersion := scala3Version,
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+      "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
+      "com.typesafe.akka" %% "akka-stream-kafka" % alpakkaKafkaVersion,
+      "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
+      "ch.qos.logback" % "logback-classic" % "1.5.18",
+      "io.spray" %% "spray-json" % "1.3.6"
+    )
+  )
 
 lazy val controller = project.in(file("controller"))
   .settings(

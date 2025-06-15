@@ -228,9 +228,5 @@ class ControllerClient(baseurl:String)() {
     val jsonResponse = Json.parse(entity.data.utf8String)
     (jsonResponse \ "message").as[String]
   }
-
-
-
-
 }
 
