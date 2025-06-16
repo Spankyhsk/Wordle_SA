@@ -159,7 +159,7 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
 
   })
 
-
+  AkkaKafkaControllerConsumer.consume()
   /**
    * Wird aufgerufen, wenn der Controller ein Event auslöst.
    * Aktuell ist diese Methode noch nicht implementiert.

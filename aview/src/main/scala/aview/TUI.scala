@@ -6,6 +6,8 @@ import util.{Event, Observer}
 import scala.io.StdIn
 import scala.util.{Failure, Success, Try}
 
+import aview.AkkaKafkaUIProducer
+
 
 class TUI (controllerClient: ControllerClient)extends Observer:
   
@@ -82,6 +84,7 @@ class TUI (controllerClient: ControllerClient)extends Observer:
         newgame = true
       }
       case default =>{
+        AkkaKafkaUIProducer.sendMessages(Seq(input))
         val guess = controllerClient.getGuessTransform(input)
         if(controllerClient.getControllLength(guess.length) && controllerClient.getControllRealWord(guess)) {
           if (!controllerClient.getAreYouWinningSon(guess)&& controllerClient.getCount()) {

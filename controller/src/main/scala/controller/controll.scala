@@ -172,6 +172,8 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient, observerCli
     persistenceClient.putGame(name)
     observerClient.triggerEvent(Event.Move)
   }
+  
+  //AkkaKafkaControllerConsumer.consume()
 }
 
 

@@ -10,7 +10,7 @@ ThisBuild / libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.19"
 ThisBuild / libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test"
 ThisBuild / libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.5.3"
 ThisBuild / libraryDependencies += "com.typesafe.akka" %% "akka-stream" % "2.8.8"
-
+ThisBuild / libraryDependencies += "com.typesafe.akka" %% "akka-stream-kafka" % "4.0.2"
 
 lazy val rest = project.in(file("rest"))
   .settings(

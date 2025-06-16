@@ -39,7 +39,6 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface, var db
 
     // GET-Anfragen behandeln (einfache Pfade → Antwort als HttpResponse generieren)
     val getModelFlow = Flow[HttpRequest].map { request =>
-      println(s"[DEBUG] Eingehender GET-Request: ${request.uri.path}")
       request.uri.path.toString match {
         // Pfad-Matching: entscheidet anhand der URI, was im Model gemacht wird
         case "/model/game/count" =>
@@ -73,7 +72,6 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface, var db
           val convertedMap = result.map { case (k, v) => k.toString -> Json.toJsFieldJsValueWrapper(JsString(v)) }
           HttpResponse(entity = Json.obj(convertedMap.toSeq: _*).toString)
         case other =>
-          println(s"[WARN] Unbekannter GET-Pfad: $other")
           HttpResponse(status = StatusCodes.NotFound, entity = s"Pfad nicht gefunden: $other")
       }
     }
@@ -85,7 +83,6 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface, var db
 
     // PUT-/POST-artige Requests (asynchrone Verarbeitung, z.B. JSON-Bodies lesen)
     val putModelFlow = Flow[HttpRequest].mapAsync(1) { request =>
-      println(s"[DEBUG] Eingehender PUT/POST-Request: ${request.uri.path}")
       request.uri.path.toString match {
         case "/model/game/createwinningboard" =>
           game.createwinningboard()
@@ -141,7 +138,6 @@ class ModelApi(using var game: GameInterface, var fileIO:FileIOInterface, var db
             HttpResponse(StatusCodes.OK)
           }
         case other =>
-          println(s"[WARN] Unbekannter PUT/POST-Pfad: $other")
           Future.successful(HttpResponse(status = StatusCodes.NotFound, entity = s"Pfad nicht gefunden: $other"))
       }
     }
