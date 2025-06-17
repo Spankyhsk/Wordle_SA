@@ -17,24 +17,34 @@ class FileIOClient(baseurl:String)() {
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
   def save(): Unit = {
-    val url = s"$baseurl/save"
-    val request = HttpRequest(HttpMethods.POST, uri = url) // PUT für die "save"-Aktion
-    Await.result(Http().singleRequest(request), 5.seconds) // Warte auf die Antwort, aber ignoriere sie
+//    val url = s"$baseurl/save"
+//    val request = HttpRequest(HttpMethods.POST, uri = url) // PUT für die "save"-Aktion
+//    Await.result(Http().singleRequest(request), 5.seconds) // Warte auf die Antwort, aber ignoriere sie
+    val command = ModelCommand("save", null)
+    val commandJson = command.asJson.noSpaces
+    val record = new ProducerRecord[String, String]("model-commands", commandJson)
+    alpakkaController.send(record)
   }
 
   def load(): String = {
-    val url = s"$baseurl/load"
-    val request = HttpRequest(HttpMethods.GET, uri = url) // GET für die "load"-Aktion
-    val response = Await.result(Http().singleRequest(request), 30.seconds)
+//    val url = s"$baseurl/load"
+//    val request = HttpRequest(HttpMethods.GET, uri = url) // GET für die "load"-Aktion
+//    val response = Await.result(Http().singleRequest(request), 30.seconds)
+//
+//    // Verarbeite die Antwort und extrahiere den "result"-String
+//    val entityFuture = response.entity.toStrict(30.seconds)
+//    val entity = Await.result(entityFuture, 30.seconds)
+//
+//    val jsonResponse = Json.parse(entity.data.utf8String)
+//    (jsonResponse \ "result").as[String] // Das "result"-Feld extrahieren und zurückgeben
+    val command = ModelCommand("load", null)
+    val commandJson = command.asJson.noSpaces
+    val record = new ProducerRecord[String, String]("model-commands", commandJson)
+    alpakkaController.send(record)
 
-    // Verarbeite die Antwort und extrahiere den "result"-String
-    val entityFuture = response.entity.toStrict(30.seconds)
-    val entity = Await.result(entityFuture, 30.seconds)
-
-    val jsonResponse = Json.parse(entity.data.utf8String)
-    (jsonResponse \ "result").as[String] // Das "result"-Feld extrahieren und zurückgeben
+    alpakkaController.resultCache.get("load") match {
+      case Some(result) => result.date.get("result")
+      case None => throw (new RuntimeException("load aufruf hat nicht richtig geklappt"))
+    }
   }
-
-  
-
 }
