@@ -9,32 +9,25 @@ import model.FileIOComponent.FileIOInterface
 import model.persistenceComponent.PersistenceInterface
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializer}
-import play.api.libs.json.JsObject
-import io.circe.*
-import io.circe.generic.semiauto.*
-import io.circe.parser.*
-import model.JsonFormats.decoder
-import org.apache.kafka.clients.producer.ProducerRecord
-import io.circe.syntax._ // für .asJson
-import io.circe.generic.auto._ // erstellt Encoder/Decoder automatisch
+import io.circe._
+import io.circe.parser._
+import io.circe.syntax._
+import io.circe.generic.auto._
+import model.GameInterface
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
-case class ModelCommand(action:String, data: Map[String, Json])
-case class ResultEvent(action: String, data:Map[String, Json])
+case class ModelCommand(action: String, data: Map[String, Json])
+case class ResultEvent(action: String, data: Map[String, Json])
 
-object JsonFormats {
-  implicit val decoder: Decoder[ModelCommand] = deriveDecoder[ModelCommand]
-}
+class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, var db: PersistenceInterface) {
 
-class ModelService(using var game: GameInterface, var fileIO:FileIOInterface, var db:PersistenceInterface) {
-
-  implicit val system: ActorSystem = ActorSystem()
+  implicit val system: ActorSystem = ActorSystem("ModelService")
   implicit val materializer: Materializer = Materializer(system)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
   val kafkaBootstrap =
-  if (sys.env.get("RUNNING_IN_DOCKER").contains("true")) "kafka:9092" else "localhost:29092"
+    if (sys.env.get("RUNNING_IN_DOCKER").contains("true")) "kafka:9092" else "localhost:29092"
 
   val consumerSettings = ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
     .withBootstrapServers(kafkaBootstrap)
@@ -46,205 +39,120 @@ class ModelService(using var game: GameInterface, var fileIO:FileIOInterface, va
 
   val kafkaProducer = producerSettings.createKafkaProducer()
 
+  def sendResultEvent(action: String, data: Map[String, Json]): Unit = {
+    val message = ResultEvent(action, data)
+    val record = new org.apache.kafka.clients.producer.ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
+    kafkaProducer.send(record)
+  }
+
+  def extractInt(data: Map[String, Json], key: String): Either[String, Int] =
+    data.get(key).flatMap(_.asNumber.flatMap(_.toInt)).toRight(s"Feld '$key' fehlt oder ist kein Int")
+
+  def extractString(data: Map[String, Json], key: String): Either[String, String] =
+    data.get(key).flatMap(_.asString).toRight(s"Feld '$key' fehlt oder ist kein String")
+
+  def extractMapIntString(json: Json): Either[String, Map[Int, String]] =
+    json.asObject.map(_.toMap.collect {
+      case (k, v) if v.isString => k.toInt -> v.asString.get
+    }).toRight("Feedback fehlt oder nicht im richtigen Format")
+
   Consumer.plainSource(consumerSettings, Subscriptions.topics("model-commands"))
     .mapAsync(1) { msg =>
       decode[ModelCommand](msg.value()) match {
         case Right(cmd) =>
+          println(s"[Kafka] Bearbeite Aktion: ${cmd.action}")
           cmd.action match {
-            case "createwinningboard" =>
-              Future {
-                game.createwinningboard()
-              }
-            case "setN" =>
-              val versucheOpt = cmd.data.get("versuche").flatMap(_.asNumber.flatMap(_.toInt))
-              versucheOpt match {
-                case Some(versuche) => Future { game.setN(versuche) }
-                case None => Future.failed(new RuntimeException("Versucheanzahl fehlt oder ist kein Int"))
-              }
-            case "createGameboard" =>
-              Future{
-                game.createGameboard()
-              }
-            case "changeState" =>
-              val levelOpt = cmd.data.get("level").flatMap(_.asNumber.flatMap(_.toInt))
-              levelOpt match {
-                case Some(level) => Future {game.changeState(level)}
-                case None => Future.failed(new RuntimeException("LevelNr. fehlt oder ist kein Int "))
-              }
-            case "save" =>
-              Future{
-                fileIO.save(game)
-              }
-            case "load" =>
-              Future {
-                val result: String = fileIO.load(game)
-                val json = Json.obj(
-                  "result" -> Json.fromString(result) // 👈 richtig!
-                )
-                val message = ResultEvent("load", json)
-                val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
-                kafkaProducer.send(record) // wenn `producer` verfügbar ist
-              }
-            case "putGame" =>
-              val nameOpt = cmd.data.get("name").flatMap(_.asString)
-              nameOpt match {
-                case Some(name) => Future{db.save(game, name)}
-                case None => Future.failed(new RuntimeException("name fehlt oder ist kein String"))
-              }
+            case "createwinningboard" => Future(game.createwinningboard())
+
+            case "setN" => extractInt(cmd.data, "versuche").map(game.setN).fold(Future.failed, Future.successful)
+
+            case "createGameboard" => Future(game.createGameboard())
+
+            case "changeState" => extractInt(cmd.data, "level").map(game.changeState).fold(Future.failed, Future.successful)
+
+            case "save" => Future(fileIO.save(game))
+
+            case "load" => Future {
+              val result = fileIO.load(game)
+              sendResultEvent("load", Map("result" -> Json.fromString(result)))
+            }
+
+            case "putGame" => extractString(cmd.data, "name").map(db.save(game, _)).fold(Future.failed, Future.successful)
+
             case "getGame" =>
-              val gameIdOpt = cmd.data.get("gameId").flatMap(_.asNumber.flatMap(_.toLong))
-              gameIdOpt match{
-                case Some(gameId) => Future{db.load(gameId, game)}
+              cmd.data.get("gameId").flatMap(_.asNumber.flatMap(_.toLong)) match {
+                case Some(gameId) => Future(db.load(gameId, game))
                 case None => Future.failed(new RuntimeException("gameId fehlt oder ist kein Long"))
               }
-            case "search" =>
-              Future{
-                val result = db.search()
-                val json = Json.obj(
-                  "result" -> Json.fromString(result)
-                )
-                val message = ResultEvent("search", json)
-                val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
-                kafkaProducer.send(record)
-              }
+
+            case "search" => Future {
+              val result = db.search()
+              sendResultEvent("search", Map("result" -> Json.fromString(result)))
+            }
+
             case "step" =>
-              val keyOpt = cmd.data.get("key").flatMap(_.asNumber.flatMap(_.toInt))
-              val feedbackOpt = cmd.data.get("feedback").flatMap(_.asObject.map { obj =>
-                obj.toMap.collect{
-                  case (k, v) if v.isString =>
-                    k.toInt -> v.asString.get
-                }
-              })
-              keyOpt match {
-                case Some(key) => Future{game.setRGameboard(key, feedbackOpt.get)}
-                case None => Future.failed(new RuntimeException("Schluessel nicht dabei oder kein int"))
+              (extractInt(cmd.data, "key"), cmd.data.get("feedback").flatMap(extractMapIntString(_).toOption)) match {
+                case (Right(key), Some(feedback)) => Future(game.setRGameboard(key, feedback))
+                case _ => Future.failed(new RuntimeException("Ungültiger step"))
               }
+
             case "undoStep" =>
-              val keyOpt = cmd.data.get("key").flatMap(_.asNumber.flatMap(_.toInt))
-              val feedbackOpt = cmd.data.get("feedback").flatMap(_.asObject.map { obj =>
-                obj.toMap.collect{
-                  case (k, v) if v.isString =>
-                    k.toInt -> v.asString.get
-                }
-              })
-              keyOpt match {
-                case Some(key) => Future{game.undoStep(key, feedbackOpt.get)}
-                case None => Future.failed(new RuntimeException("Schluessel nicht dabei oder kein int"))
+              (extractInt(cmd.data, "key"), cmd.data.get("feedback").flatMap(extractMapIntString(_).toOption)) match {
+                case (Right(key), Some(feedback)) => Future(game.undoStep(key, feedback))
+                case _ => Future.failed(new RuntimeException("Ungültiger undoStep"))
               }
-            case "count" =>
-              Future{
-                val result = game.count()
-                val json = Json.obj(
-                  "continue" -> Json.fromInt(result)
-                )
-                val message = ResultEvent("count", json)
-                val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
-                kafkaProducer.send(record)
-              }
-            case "getN" =>
-              Future{
-                val result = game.getN()
-                val json = Json.obj(
-                  "result" -> Json.fromInt(result)
-                )
-                val message = ResultEvent("getN", json)
-                val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
-                kafkaProducer.send(record)
-              }
-            case "gamebaord" =>
-              Future{
-                val result = game.toString
-                val json = Json.obj(
-                  "gameboard" -> Json.fromString(result)
-                )
-                val message = ResultEvent("gamebaord", json)
-                val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
-                kafkaProducer.send(record)
-              }
-            case "TargetwordToString" =>
-              Future{
-                val result = game.TargetwordToString()
-                val json = Json.obj(
-                  "targetWord" -> Json.fromString(result)
-                )
-                val message = ResultEvent("TargetwordToString", json)
-                val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
-                kafkaProducer.send(record)
-              }
-            case "GuessTransform" =>
-              val guessOpt = cmd.data.get("guess").flatMap(_.asString)
-              guessOpt match{
-                case Some(guess) =>
-                  Future{
-                    val result = game.GuessTransform(guess)
-                    val json = Json.obj(
-                      "transformedGuess" -> Json.fromString(result)
-                    )
-                    val message = ResultEvent("GuessTransform", json)
-                    val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
-                    kafkaProducer.send(record)
-                  }
-                case None => Future.failed(new RuntimeException("Guess war nicht dabei oder kein String"))
-              }
-            case "controllLength" =>
-              val lengthOpt = cmd.data.get("length").flatMap(_.asNumber.flatMap(_.toInt))
-              lengthOpt match{
-                case Some(length) =>
-                  Future{
-                    val result = game.controllLength(length)
-                    val json = Json.obj(
-                      "result" -> Json.fromBoolean(result)
-                    )
-                    val message = ResultEvent("controllLength", json)
-                    val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
-                    kafkaProducer.send(record)
-                  }
-                case None => Future.failed(new RuntimeException("Guess war nicht dabei oder kein String"))
-              }
-            case "controllRealWord" =>
-              val guessOpt = cmd.data.get("guess").flatMap(_.asNumber.flatMap(_.toInt))
-              guessOpt match{
-                case Some(guess) =>
-                  Future{
-                    val result = game.controllRealWord(guess)
-                    val json = Json.obj(
-                      "result" -> Json.fromBoolean(result)
-                    )
-                    val message = ResultEvent("controllRealWord", json)
-                    val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
-                    kafkaProducer.send(record)
-                  }
-                case None => Future.failed(new RuntimeException("Guess war nicht dabei oder kein String"))
-              }
-            case "evaluateGuess" =>
-              val evaluateGuessOpt = cmd.data.get("guess").flatMap(_.asString)
-              evaluateGuessOpt match{
-                case Some(evaluateGuess) =>
-                  Future{
-                    val result: Map[Int, String] = game.evaluateGuess(guess)
 
-                    // Konvertiere Map[Int, String] zu Json
-                    val jsonResult: Json = Json.obj(
-                      "result" -> result.map { case (k, v) =>
-                        k.toString -> Json.fromString(v)
-                      }.asJson
-                    )
-                    val message = ResultEvent("evaluateGuess", jsonResult)
+            case "count" => Future {
+              sendResultEvent("count", Map("continue" -> Json.fromInt(game.count())))
+            }
 
-                    val record = new ProducerRecord[String, String](
-                      "model-result",
-                      message.asJson.noSpaces
-                    )
+            case "getN" => Future {
+              sendResultEvent("getN", Map("result" -> Json.fromInt(game.getN())))
+            }
 
-                    kafkaProducer.send(record)
-                  }
-                case None => Future.failed(new RuntimeException("Guess war nicht dabei oder kein String"))
+            case "gameboard" => Future {
+              sendResultEvent("gameboard", Map("gameboard" -> Json.fromString(game.toString)))
+            }
+
+            case "TargetwordToString" => Future {
+              sendResultEvent("TargetwordToString", Map("targetWord" -> Json.fromString(game.TargetwordToString())))
+            }
+
+            case "GuessTransform" => extractString(cmd.data, "guess") match {
+              case Right(guess) => Future {
+                sendResultEvent("GuessTransform", Map("transformedGuess" -> Json.fromString(game.GuessTransform(guess))))
               }
-            case other =>
-              Future.failed(new RuntimeException(s"Unbekannter Aktion: $other"))
+              case Left(err) => Future.failed(new RuntimeException(err))
+            }
+
+            case "controllLength" => extractInt(cmd.data, "length") match {
+              case Right(length) => Future {
+                sendResultEvent("controllLength", Map("result" -> Json.fromBoolean(game.controllLength(length))))
+              }
+              case Left(err) => Future.failed(new RuntimeException(err))
+            }
+
+            case "controllRealWord" => extractInt(cmd.data, "guess") match {
+              case Right(guess) => Future {
+                sendResultEvent("controllRealWord", Map("result" -> Json.fromBoolean(game.controllRealWord(guess))))
+              }
+              case Left(err) => Future.failed(new RuntimeException(err))
+            }
+
+            case "evaluateGuess" => extractString(cmd.data, "guess") match {
+              case Right(guess) => Future {
+                val result = game.evaluateGuess(guess)
+                val jsonResult = result.map { case (k, v) => k.toString -> Json.fromString(v) }
+                sendResultEvent("evaluateGuess", Map("result" -> Json.obj(jsonResult.toSeq: _*)))
+              }
+              case Left(err) => Future.failed(new RuntimeException(err))
+            }
+
+            case other => Future.failed(new RuntimeException(s"Unbekannte Aktion: $other"))
           }
-        case Left(error) =>
-          Future.failed(new RuntimeException(s"JSON Parsing Fehler: $error"))
+        case Left(err) =>
+          println(s"[Kafka] Fehler beim JSON-Parsing: $err")
+          Future.unit
       }
     }
     .runWith(Sink.ignore)
