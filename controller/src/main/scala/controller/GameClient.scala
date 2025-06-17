@@ -11,15 +11,20 @@ import model.GameInterface
 import model.gamefieldComponent.{GamefieldInterface, gameboard}
 import model.gamemechComponent.gamemechInterface
 import play.api.libs.json.{Format, JsError, JsResult, JsValue, Json, OFormat}
+import controller.AlpakkaController.*
+import io.circe.syntax._ // für .asJson
+import io.circe.generic.auto._ // erstellt Encoder/Decoder automatisch
 
 import scala.concurrent.duration.*
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 
-class GameClient(baseurl:String)() {
+class GameClient(alpakkaController: AlpakkaController)() {
 
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(system)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+  
+//  val alpakkaController = AlpakkaController
 
   implicit val gamefieldFormat: Format[GamefieldInterface[GamefieldInterface[String]]] = new Format[GamefieldInterface[GamefieldInterface[String]]] {
     override def reads(json: JsValue): JsResult[GamefieldInterface[GamefieldInterface[String]]] = {
@@ -41,15 +46,24 @@ class GameClient(baseurl:String)() {
   }
 
   def count(): Boolean = {
-    val url = s"$baseurl/count"
-    val request = HttpRequest(HttpMethods.GET, uri = url)
-    val response = Await.result(Http().singleRequest(request), 30.seconds)
-
-    // Verarbeite die Antwort und extrahiere den "continue"-Boolean
-    val entityFuture = response.entity.toStrict(30.seconds)
-    val entity = Await.result(entityFuture, 30.seconds)
-    val jsonResponse = Json.parse(entity.data.utf8String)
-    (jsonResponse \ "continue").as[Boolean] // Das "continue"-Feld extrahieren und zurückgeben
+//    val url = s"$baseurl/count"
+//    val request = HttpRequest(HttpMethods.GET, uri = url)
+//    val response = Await.result(Http().singleRequest(request), 30.seconds)
+//
+//    // Verarbeite die Antwort und extrahiere den "continue"-Boolean
+//    val entityFuture = response.entity.toStrict(30.seconds)
+//    val entity = Await.result(entityFuture, 30.seconds)
+//    val jsonResponse = Json.parse(entity.data.utf8String)
+//    (jsonResponse \ "continue").as[Boolean] // Das "continue"-Feld extrahieren und zurückgeben
+    val command = ModelCommand("count", null)
+    val commandJson = command.asJson.noSpaces
+    val record = new ProducerRecord[String, String]("model-commands", commandJson)
+    alpakkaController.send(record)
+    
+    alpakkaController.resultCache.get("count") match{
+      case Some(result) => result.date.get("continue")
+      case None => throw(new RuntimeException("count aufruf hat nicht richtig geklappt"))
+    }
   }
 
   def controllLength(n: Int): Boolean = {

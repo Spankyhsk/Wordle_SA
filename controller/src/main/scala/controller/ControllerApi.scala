@@ -33,13 +33,7 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
   implicit val materializer: Materializer = Materializer(system)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 //Note: getTargetword -> getTargetwordString
-  /**
-   * Definiert die HTTP-Routen für die API.
-   *
-   * - `GET /contoller/count`: Gibt zurück, ob das Spiel fortgesetzt werden kann.
-   * Die Antwort ist ein JSON-Objekt mit einem `continue`-Feld, das einen Boolean-Wert enthält.
-   */
-
+  
   // controllerFlow: verarbeitet HttpRequest → gibt String zurück
   private val controllerFlow: Flow[HttpRequest, String, NotUsed] = Flow.fromGraph(GraphDSL.create() { implicit builder: Builder[NotUsed] =>
     import GraphDSL.Implicits._

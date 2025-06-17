@@ -15,10 +15,13 @@ import io.circe.generic.semiauto.*
 import io.circe.parser.*
 import model.JsonFormats.decoder
 import org.apache.kafka.clients.producer.ProducerRecord
+import io.circe.syntax._ // für .asJson
+import io.circe.generic.auto._ // erstellt Encoder/Decoder automatisch
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
 case class ModelCommand(action:String, data: Map[String, Json])
+case class ResultEvent(action: String, data:Map[String, Json])
 
 object JsonFormats {
   implicit val decoder: Decoder[ModelCommand] = deriveDecoder[ModelCommand]
@@ -78,7 +81,8 @@ class ModelService(using var game: GameInterface, var fileIO:FileIOInterface, va
                 val json = Json.obj(
                   "result" -> Json.fromString(result) // 👈 richtig!
                 )
-                val record = new ProducerRecord[String, String]("model-result", json.noSpaces)
+                val message = ResultEvent("load", json)
+                val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
                 kafkaProducer.send(record) // wenn `producer` verfügbar ist
               }
             case "putGame" =>
@@ -99,7 +103,8 @@ class ModelService(using var game: GameInterface, var fileIO:FileIOInterface, va
                 val json = Json.obj(
                   "result" -> Json.fromString(result)
                 )
-                val record = new ProducerRecord[String, String]("model-result", json.noSpaces)
+                val message = ResultEvent("search", json)
+                val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
                 kafkaProducer.send(record)
               }
             case "step" =>
@@ -132,7 +137,8 @@ class ModelService(using var game: GameInterface, var fileIO:FileIOInterface, va
                 val json = Json.obj(
                   "continue" -> Json.fromInt(result)
                 )
-                val record = new ProducerRecord[String, String]("model-result", json.noSpaces)
+                val message = ResultEvent("count", json)
+                val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
                 kafkaProducer.send(record)
               }
             case "getN" =>
@@ -141,7 +147,8 @@ class ModelService(using var game: GameInterface, var fileIO:FileIOInterface, va
                 val json = Json.obj(
                   "result" -> Json.fromInt(result)
                 )
-                val record = new ProducerRecord[String, String]("model-result", json.noSpaces)
+                val message = ResultEvent("getN", json)
+                val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
                 kafkaProducer.send(record)
               }
             case "gamebaord" =>
@@ -150,7 +157,8 @@ class ModelService(using var game: GameInterface, var fileIO:FileIOInterface, va
                 val json = Json.obj(
                   "gameboard" -> Json.fromString(result)
                 )
-                val record = new ProducerRecord[String, String]("model-result", json.noSpaces)
+                val message = ResultEvent("gamebaord", json)
+                val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
                 kafkaProducer.send(record)
               }
             case "TargetwordToString" =>
@@ -159,7 +167,8 @@ class ModelService(using var game: GameInterface, var fileIO:FileIOInterface, va
                 val json = Json.obj(
                   "targetWord" -> Json.fromString(result)
                 )
-                val record = new ProducerRecord[String, String]("model-result", json.noSpaces)
+                val message = ResultEvent("TargetwordToString", json)
+                val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
                 kafkaProducer.send(record)
               }
             case "GuessTransform" =>
@@ -171,7 +180,8 @@ class ModelService(using var game: GameInterface, var fileIO:FileIOInterface, va
                     val json = Json.obj(
                       "transformedGuess" -> Json.fromString(result)
                     )
-                    val record = new ProducerRecord[String, String]("model-result", json.noSpaces)
+                    val message = ResultEvent("GuessTransform", json)
+                    val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
                     kafkaProducer.send(record)
                   }
                 case None => Future.failed(new RuntimeException("Guess war nicht dabei oder kein String"))
@@ -185,7 +195,8 @@ class ModelService(using var game: GameInterface, var fileIO:FileIOInterface, va
                     val json = Json.obj(
                       "result" -> Json.fromBoolean(result)
                     )
-                    val record = new ProducerRecord[String, String]("model-result", json.noSpaces)
+                    val message = ResultEvent("controllLength", json)
+                    val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
                     kafkaProducer.send(record)
                   }
                 case None => Future.failed(new RuntimeException("Guess war nicht dabei oder kein String"))
@@ -199,7 +210,8 @@ class ModelService(using var game: GameInterface, var fileIO:FileIOInterface, va
                     val json = Json.obj(
                       "result" -> Json.fromBoolean(result)
                     )
-                    val record = new ProducerRecord[String, String]("model-result", json.noSpaces)
+                    val message = ResultEvent("controllRealWord", json)
+                    val record = new ProducerRecord[String, String]("model-result", message.asJson.noSpaces)
                     kafkaProducer.send(record)
                   }
                 case None => Future.failed(new RuntimeException("Guess war nicht dabei oder kein String"))
@@ -217,12 +229,13 @@ class ModelService(using var game: GameInterface, var fileIO:FileIOInterface, va
                         k.toString -> Json.fromString(v)
                       }.asJson
                     )
+                    val message = ResultEvent("evaluateGuess", jsonResult)
 
                     val record = new ProducerRecord[String, String](
                       "model-result",
-                      jsonResult.noSpaces
+                      message.asJson.noSpaces
                     )
-                    
+
                     kafkaProducer.send(record)
                   }
                 case None => Future.failed(new RuntimeException("Guess war nicht dabei oder kein String"))
