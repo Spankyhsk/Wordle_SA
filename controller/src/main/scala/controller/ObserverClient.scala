@@ -17,6 +17,7 @@ class ObserverClient(alpakkaController: AlpakkaController)() {
 
   def triggerEvent(event:Event): Future[Unit] = {
     alpakkaController.sendUiEvent(event)
+    println(s"ObserverClient: Event $event gesendet")
     Future.successful(())
   }
 }

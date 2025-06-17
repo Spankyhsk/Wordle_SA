@@ -45,18 +45,17 @@ class UIApi()() extends Observable{
   Consumer
     .plainSource(consumerSettings, Subscriptions.topics("ui-events"))
     .map { msg =>
+      println(s"msg ist vom Typ: " + msg.value())
       val jsonString = msg.value()
-
-      val eventOpt = for {
+      val eventOpt: Option[String] = for {
         json <- parse(jsonString).toOption
-        eventStr <- json.hcursor.get[String]("eventType").toOption
-        event <- Event.values.find(_.toString == eventStr)
+        event <- json.hcursor.get[String]("eventType").toOption
       } yield event
 
       eventOpt match {
         case Some(event) =>
           println(s" UI-Event empfangen: $event")
-          notifyObservers(event)
+          notifyObservers(valueOf(event))
         case None =>
           println(s"⚠Konnte Event nicht erkennen in Nachricht: $jsonString")
       }
