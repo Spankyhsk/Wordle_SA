@@ -64,11 +64,11 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
           cmd.action match {
             case "createwinningboard" => Future(game.createwinningboard())
 
-            case "setN" => extractInt(cmd.data, "versuche").map(game.setN).fold(Future.failed, Future.successful)
+            case "setN" => extractInt(cmd.data, "versuche").fold(err => Future.failed(new RuntimeException(err)), versuche => Future { game.setN(versuche)})
 
             case "createGameboard" => Future(game.createGameboard())
 
-            case "changeState" => extractInt(cmd.data, "level").map(game.changeState).fold(Future.failed, Future.successful)
+            case "changeState" => extractInt(cmd.data, "level").map(game.changeState).fold(err => Future.failed(new RuntimeException(err)), Future.successful)
 
             case "save" => Future(fileIO.save(game))
 
@@ -77,7 +77,7 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
               sendResultEvent("load", Map("result" -> Json.fromString(result)))
             }
 
-            case "putGame" => extractString(cmd.data, "name").map(db.save(game, _)).fold(Future.failed, Future.successful)
+            case "putGame" => extractString(cmd.data, "name").map(db.save(game, _)).fold(err => Future.failed(new RuntimeException(err)), Future.successful)
 
             case "getGame" =>
               cmd.data.get("gameId").flatMap(_.asNumber.flatMap(_.toLong)) match {
@@ -103,7 +103,7 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
               }
 
             case "count" => Future {
-              sendResultEvent("count", Map("continue" -> Json.fromInt(game.count())))
+              sendResultEvent("count", Map("continue" -> Json.fromBoolean(game.count())))
             }
 
             case "getN" => Future {
@@ -132,7 +132,7 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
               case Left(err) => Future.failed(new RuntimeException(err))
             }
 
-            case "controllRealWord" => extractInt(cmd.data, "guess") match {
+            case "controllRealWord" => extractString(cmd.data, "guess") match {
               case Right(guess) => Future {
                 sendResultEvent("controllRealWord", Map("result" -> Json.fromBoolean(game.controllRealWord(guess))))
               }
