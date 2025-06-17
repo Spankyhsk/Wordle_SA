@@ -58,6 +58,7 @@ class AlpakkaController {
   val resultCache: TrieMap[String, ResultEvent] = TrieMap.empty
 
   // --- Kafka Consumer: Ergebnisse vom Model empfangen ---
+  //todo: Hier bin ich stehen geblieben -Cilas
   Consumer
     .plainSource(consumerSettings, Subscriptions.topics("model-result"))
     .map { msg =>
