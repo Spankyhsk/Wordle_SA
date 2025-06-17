@@ -5,7 +5,9 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest, StatusCodes}
 import akka.stream.Materializer
 import org.apache.kafka.clients.producer.ProducerRecord
-import play.api.libs.json.{Format, JsError, JsResult, JsValue, Json, OFormat}
+import io.circe.syntax._
+import io.circe.Json
+import io.circe.generic.auto._
 
 import scala.concurrent.duration.*
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
@@ -16,57 +18,40 @@ class PersistenceClient(alpakkaController: AlpakkaController)() {
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
   def putGame(name: String): Unit = {
-    val command = ModelCommand("putGame?name", name)
+    val command = ModelCommand("putGame", Map("name" -> Json.fromString(name)))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
-    alpakkaController.resultCache.get("putGame?name") match {
-      case Some(result) => result.date.get("continue")
-      case None => throw (new RuntimeException("putGame aufruf hat nicht richtig geklappt"))
+    alpakkaController.resultCache.get("putGame") match {
+      case Some(result) => result.data.get("continue").flatMap(_.asString)
+      case None => throw new RuntimeException("putGame-Aufruf hat nicht richtig geklappt")
     }
   }
 
-
   def getGame(gameId: Long): Unit = {
-//    val url = s"$baseurl/getGame?gameId=$gameId"
-//    val request = HttpRequest(HttpMethods.GET, uri = url) // PUT für die "save"-Aktion
-//    Await.result(Http().singleRequest(request), 30.seconds) // Warte auf die Antwort, aber ignoriere sie
-
-    val command = ModelCommand("getGame?gameId", gameId)
+    val command = ModelCommand("getGame", Map("gameId" -> Json.fromLong(gameId)))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
-    alpakkaController.resultCache.get("getGame?gameId") match {
-      case Some(result) => result.date.get("continue")
-      case None => throw (new RuntimeException("getGame aufruf hat nicht richtig geklappt"))
+    alpakkaController.resultCache.get("getGame") match {
+      case Some(result) => result.data.get("continue").flatMap(_.asString)
+      case None => throw new RuntimeException("getGame-Aufruf hat nicht richtig geklappt")
     }
-    
+
   }
 
   def search(): String = {
-//    val url = s"$baseurl/search"
-//    val request = HttpRequest(HttpMethods.GET, uri = url)
-//    val response = Await.result(Http().singleRequest(request), 30.seconds)
-//
-//    // sucht gameid und namen raus
-//    val entityFuture = response.entity.toStrict(30.seconds)
-//    val entity = Await.result(entityFuture, 30.seconds)
-//
-//    val jsonResponse = Json.parse(entity.data.utf8String)
-//    (jsonResponse \ "result").as[String]
-
-
-    val command = ModelCommand("search", null)
+    val command = ModelCommand("search", Map.empty)
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
     alpakkaController.resultCache.get("search") match {
-      case Some(result) => result.date.get("continue")
-      case None => throw (new RuntimeException("search aufruf hat nicht richtig geklappt"))
+      case Some(result) => result.data.get("continue").flatMap(_.asString).getOrElse("Kein Ergebnis")
+      case None => throw new RuntimeException("search-Aufruf hat nicht richtig geklappt")
     }
-  }
 
+  }
 }
