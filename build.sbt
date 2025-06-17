@@ -11,6 +11,9 @@ ThisBuild / libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "
 ThisBuild / libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.5.3"
 ThisBuild / libraryDependencies += "com.typesafe.akka" %% "akka-stream" % "2.8.8"
 ThisBuild / libraryDependencies += "com.typesafe.akka" %% "akka-stream-kafka" % "4.0.2"
+ThisBuild / libraryDependencies += "io.circe" %% "circe-core" % "0.14.5"
+ThisBuild / libraryDependencies += "io.circe" %% "circe-parser" % "0.14.5"
+ThisBuild / libraryDependencies += "io.circe" %% "circe-generic" % "0.14.5"
 
 lazy val rest = project.in(file("rest"))
   .settings(
