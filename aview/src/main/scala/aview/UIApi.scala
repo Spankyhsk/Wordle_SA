@@ -4,7 +4,6 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
-import play.api.libs.json.Json
 import util.{Event, Observable}
 import akka.stream.{ActorMaterializer, FlowShape, Materializer, UniformFanInShape, UniformFanOutShape}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse, StatusCodes}
@@ -18,6 +17,12 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
 import io.circe.parser.*
 import io.circe.Json
+import akka.kafka.ConsumerSettings
+import akka.kafka.scaladsl.Consumer
+import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.kafka.clients.consumer.ConsumerConfig
+import akka.kafka.Subscriptions
+
 
 class UIApi()() extends Observable{
 
@@ -72,7 +77,7 @@ class UIApi()() extends Observable{
         HttpResponse(entity = "Willkommen zu Wordle\nBefehle\n$quit := Spiel beenden, $save := Speichern, $load := Laden, $switch := Schwierigkeiten verändern, $OnlineSave := Online Speichern")
 
       case req if req.uri.path.toString == "/ui/tui/getNewGame" =>
-        HttpResponse(entity = Json.obj("newGame" -> TUI.getnewgame()).toString())
+        HttpResponse(entity = Json.obj("newGame" -> Json.fromBoolean(TUI.getnewgame())).noSpaces)
 
       case req if req.uri.path.toString == "/ui/tui/Select" =>
         HttpResponse(entity = "Gamemode aussuchen: \n1:= leicht\n2:= mittel\n3:= schwer")

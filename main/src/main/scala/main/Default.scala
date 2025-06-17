@@ -32,11 +32,19 @@ object Default:
   // Controller
 //  val injector = Guice.createInjector(new WordleModuleJson)
 //  given ControllerInterface = injector.getInstance(classOf[ControllerInterface])
+  
+//  given ControllerInterface = new controll(
+//    new GameClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082") + "/model/game"),
+//    new FileIOClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082") + "/model/fileIO"),
+//    new ObserverClient(sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + "/ui"),
+//    new PersistenceClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082")+ "/model/persistence")
+//  )
+  val alpakkaController = new AlpakkaController()
   given ControllerInterface = new controll(
-    new GameClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082") + "/model/game"),
-    new FileIOClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082") + "/model/fileIO"),
-    new ObserverClient(sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + "/ui"),
-    new PersistenceClient(sys.env.getOrElse("MODEL_URL", "http://localhost:8082")+ "/model/persistence")
+    new GameClient(alpakkaController),
+    new FileIOClient(alpakkaController),
+    new ObserverClient(alpakkaController),
+    new PersistenceClient(alpakkaController)
   )
 
   // Optional: Factory Methoden

@@ -11,7 +11,7 @@ import model.GameInterface
 import model.gamefieldComponent.{GamefieldInterface, gameboard}
 import model.gamemechComponent.gamemechInterface
 import play.api.libs.json.{Format, JsError, JsResult, JsValue, Json => PlayJson, OFormat}
-import controller.AlpakkaController.*
+//import controller.AlpakkaController.*
 import io.circe.syntax._ // für .asJson
 import io.circe.generic.auto._ // erstellt Encoder/Decoder automatisch
 
@@ -64,7 +64,7 @@ class GameClient(alpakkaController: AlpakkaController)() {
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
-    
+
     alpakkaController.resultCache.get("count") match{
       case Some(result) => result.data.get("continue").flatMap(_.asBoolean).getOrElse(
         throw new RuntimeException("Kein 'continue'-Feld im Ergebnis gefunden")
