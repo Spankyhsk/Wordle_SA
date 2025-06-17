@@ -59,7 +59,7 @@ class AlpakkaController {
 
   // --- Kafka Consumer: Ergebnisse vom Model empfangen ---
   Consumer
-    .plainSource(consumerSettings, Subscriptions.topics("model-results"))
+    .plainSource(consumerSettings, Subscriptions.topics("model-result"))
     .map { msg =>
       decode[ResultEvent](msg.value()) match {
         case Right(result) =>

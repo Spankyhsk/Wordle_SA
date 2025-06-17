@@ -66,6 +66,7 @@ case class Game(mech:gamemechInterface, board:GamefieldInterface[GamefieldInterf
   }
 
   def GuessTransform(guess: String): String = {
+    println(s"Received guess in Game: $guess")
     mech.GuessTransform(guess)
   }
 
