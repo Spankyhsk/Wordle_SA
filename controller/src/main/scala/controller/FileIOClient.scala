@@ -4,11 +4,15 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpMethods, HttpRequest, HttpResponse}
 import akka.stream.Materializer
-import play.api.libs.json.Json
+//import play.api.libs.json.Json
 
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import scala.concurrent.duration.*
 
+import io.circe.syntax.EncoderOps
+import io.circe.Json
+import org.apache.kafka.clients.producer.ProducerRecord
+import io.circe.generic.auto._ // oder: import io.circe.generic.semiauto.deriveEncoder
 
 class FileIOClient(alpakkaController: AlpakkaController)() {
   
@@ -43,8 +47,10 @@ class FileIOClient(alpakkaController: AlpakkaController)() {
     alpakkaController.send(record)
 
     alpakkaController.resultCache.get("load") match {
-      case Some(result) => result.date.get("result")
-      case None => throw (new RuntimeException("load aufruf hat nicht richtig geklappt"))
+      case Some(result) => result.data.get("result").flatMap(_.asString).getOrElse(
+        throw new RuntimeException("Kein 'result'-Feld im Ergebnis gefunden")
+      )
+      case None => throw new RuntimeException("load aufruf hat nicht richtig geklappt")
     }
   }
 }

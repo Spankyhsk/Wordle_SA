@@ -10,13 +10,18 @@ import akka.stream.{ActorMaterializer, Materializer}
 import model.GameInterface
 import model.gamefieldComponent.{GamefieldInterface, gameboard}
 import model.gamemechComponent.gamemechInterface
-import play.api.libs.json.{Format, JsError, JsResult, JsValue, Json, OFormat}
+import play.api.libs.json.{Format, JsError, JsResult, JsValue, Json => PlayJson, OFormat}
 import controller.AlpakkaController.*
 import io.circe.syntax._ // für .asJson
 import io.circe.generic.auto._ // erstellt Encoder/Decoder automatisch
 
 import scala.concurrent.duration.*
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
+
+import org.apache.kafka.clients.producer.ProducerRecord
+import io.circe.Json
+import io.circe.generic.auto._ // oder: import io.circe.generic.semiauto.deriveEncoder
+import io.circe.parser.decode
 
 class GameClient(alpakkaController: AlpakkaController)() {
 
@@ -37,7 +42,7 @@ class GameClient(alpakkaController: AlpakkaController)() {
       val boardMap = o.getMap().map { case (key, gameField) =>
         key -> gameField.getMap()
       }
-      Json.toJson(boardMap)
+      PlayJson.toJson(boardMap)
     }
   }
 
@@ -61,8 +66,9 @@ class GameClient(alpakkaController: AlpakkaController)() {
     alpakkaController.send(record)
     
     alpakkaController.resultCache.get("count") match{
-      case Some(result) => result.date.get("continue")
-      case None => throw(new RuntimeException("count aufruf hat nicht richtig geklappt"))
+      case Some(result) => result.data.get("continue").flatMap(_.asBoolean).getOrElse(
+        throw new RuntimeException("Kein 'continue'-Feld im Ergebnis gefunden")
+      )
     }
   }
 
@@ -76,14 +82,15 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val entity = Await.result(entityFuture, 30.seconds)
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    (jsonResponse \ "result").as[Boolean] // Das "result"-Feld extrahieren und zurückgeben
-    val command = ModelCommand("controllLength", n)
+    val command = ModelCommand("controllLength", Map("length" -> n.asJson))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
     alpakkaController.resultCache.get("controllLength") match {
-      case Some(result) => result.date.get("result")
-      case None => throw(new RuntimeException("controllLength aufruf hat nicht richtig geklappt"))
+      case Some(result) => result.data.get("result").flatMap(_.asBoolean).getOrElse(
+        throw new RuntimeException("Kein 'result'-Feld im Ergebnis gefunden")
+      )
     }
   }
 
@@ -96,13 +103,15 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val entity = Await.result(entityFuture, 30.seconds)
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    (jsonResponse \ "result").as[Boolean] // Das "result"-Feld extrahieren und zurückgeben
-    val command = ModelCommand("controllRealWord", guess)
+    val command = ModelCommand("controllRealWord", Map("guess" -> guess.asJson))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
     alpakkaController.resultCache.get("controllRealWord") match {
-      case Some(result) => result.date.get("result")
+      case Some(result) => result.data.get("result").flatMap(_.asBoolean).getOrElse(
+        throw new RuntimeException("Kein 'result'-Feld im Ergebnis gefunden")
+      )
       case None => throw(new RuntimeException("controllRealWord aufruf hat nicht richtig geklappt"))
     }
   }
@@ -118,13 +127,13 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    // JSON parsen und als Map[Int, String] zurückgeben
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    jsonResponse.as[Map[Int, String]]
-    val command = ModelCommand("evaluateGuess", guess)
+    val command = ModelCommand("evaluateGuess", Map("guess" -> guess.asJson))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
     alpakkaController.resultCache.get("evaluateGuess") match {
-      case Some(result) => result.date.get("result").asInstanceOf[Map[Int, String]]
+      case Some(result) => result.data.get("result").asInstanceOf[Map[Int, String]]
       case None => throw(new RuntimeException("evaluateGuess aufruf hat nicht richtig geklappt"))
     }
   }
@@ -138,13 +147,15 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val entity = Await.result(entityFuture, 30.seconds)
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    (jsonResponse \ "transformedGuess").as[String] // Das "transformedGuess"-Feld extrahieren und zurückgeben
-    val command = ModelCommand("guessTransform", guess)
+    val command = ModelCommand("guessTransform", Map("guess" -> guess.asJson))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
     alpakkaController.resultCache.get("guessTransform") match {
-      case Some(result) => result.date.get("transformedGuess")
+      case Some(result) => result.data.get("transformedGuess").flatMap(_.asString).getOrElse(
+        throw new RuntimeException("Kein 'transformedGuess'-Feld im Ergebnis gefunden")
+      )
       case None => throw(new RuntimeException("guessTransform aufruf hat nicht richtig geklappt"))
     }
   }
@@ -153,7 +164,7 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val url = s"$baseurl/setN?versuche=$zahl"
 //    val request = HttpRequest(HttpMethods.PUT, uri = url)
 //    Await.result(Http().singleRequest(request), 30.seconds) // Warte auf die Antwort
-    val command = ModelCommand("setN", zahl)
+    val command = ModelCommand("setN", Map("versuche" -> zahl.asJson))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
@@ -174,7 +185,7 @@ class GameClient(alpakkaController: AlpakkaController)() {
     alpakkaController.send(record)
 
     alpakkaController.resultCache.get("getN") match {
-      case Some(result) => result.date.get("result").asInstanceOf[Int]
+      case Some(result) => result.data.get("result").asInstanceOf[Int]
       case None => throw(new RuntimeException("getN aufruf hat nicht richtig geklappt"))
     }
   }
@@ -188,13 +199,15 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val entity = Await.result(entityFuture, 30.seconds)
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    (jsonResponse \ "won").as[Boolean] // Das "won"-Feld extrahieren und zurückgeben
-    val command = ModelCommand("areYouWinningSon", guess)
+    val command = ModelCommand("areYouWinningSon", Map("guess" -> guess.asJson))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
     alpakkaController.resultCache.get("areYouWinningSon") match {
-      case Some(result) => result.date.get("won")
+      case Some(result) => result.data.get("won").flatMap(_.asBoolean).getOrElse(
+        throw new RuntimeException("Kein 'won'-Feld im Ergebnis gefunden")
+      )
       case None => throw(new RuntimeException("areYouWinningSon aufruf hat nicht richtig geklappt"))
     }
   }
@@ -234,7 +247,9 @@ class GameClient(alpakkaController: AlpakkaController)() {
     alpakkaController.send(record)
 
     alpakkaController.resultCache.get("toString") match {
-      case Some(result) => result.date.get("gameboard")
+      case Some(result) => result.data.get("gameboard").flatMap(_.asString).getOrElse(
+        throw new RuntimeException("Kein 'gameboard'-Feld im Ergebnis gefunden")
+      )
       case None => throw(new RuntimeException("toString aufruf hat nicht richtig geklappt"))
     }
   }
@@ -243,7 +258,7 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val url = s"$baseurl/changeState?level=$e"
 //    val request = HttpRequest(HttpMethods.PATCH, uri = url)
 //    Await.result(Http().singleRequest(request), 30.seconds) // Warte auf die Antwort
-    val command = ModelCommand("changeState", e)
+    val command = ModelCommand("changeState", Map("level" -> e.asJson))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
@@ -264,7 +279,9 @@ class GameClient(alpakkaController: AlpakkaController)() {
     alpakkaController.send(record)
 
     alpakkaController.resultCache.get("TargetwordToString") match {
-      case Some(result) => result.date.get("targetWord")
+      case Some(result) => result.data.get("targetWord").flatMap(_.asString).getOrElse(
+        throw new RuntimeException("Kein 'targetWord'-Feld im Ergebnis gefunden")
+      )
       case None => throw(new RuntimeException("TargetwordToString aufruf hat nicht richtig geklappt"))
     }
   }
@@ -280,9 +297,7 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //      entity = entity
 //    )
 //    Http().singleRequest(request)
-    val json: JsValue = Json.toJson(feedback)
-    val entity = HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
-    val command = ModelCommand("step", key, Some(entity))
+    val command = ModelCommand("step", Map("key" -> key.asJson, "feedback" -> feedback.asJson))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
@@ -297,9 +312,7 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //      entity = entity
 //    )
 //    Http().singleRequest(request)
-    val json: JsValue = Json.toJson(feedback)
-    val entity = HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
-    val command = ModelCommand("undoStep", key, Some(entity))
+    val command = ModelCommand("undoStep", Map("key" -> key.asJson, "feedback" -> feedback.asJson))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
