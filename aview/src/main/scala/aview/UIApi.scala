@@ -55,7 +55,7 @@ class UIApi()() extends Observable{
       eventOpt match {
         case Some(event) =>
           println(s" UI-Event empfangen: $event")
-          notifyObservers(valueOf(event))
+          notifyObservers(Event.valueOf(event))
         case None =>
           println(s"⚠Konnte Event nicht erkennen in Nachricht: $jsonString")
       }

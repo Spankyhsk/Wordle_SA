@@ -118,7 +118,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_CREATE_TOPICS: controller:1:1,model:1:1,ui:1:1
+      KAFKA_CREATE_TOPICS: model-commands:1:1,model-result:1:1,model-results:1:1,ui-events:1:1
 
 networks:
   app-network:

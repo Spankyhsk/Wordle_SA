@@ -38,7 +38,7 @@ object wordle {
     implicit val system: ActorSystem = ActorSystem("WordleSystem")
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-
+    
     ModelApi() // Port 8082
     ControllerApi() // Port 8081
     println("-------------------------------------------------------------------------------------------------")

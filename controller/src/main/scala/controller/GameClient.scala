@@ -149,6 +149,7 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    (jsonResponse \ "transformedGuess").as[String] // Das "transformedGuess"-Feld extrahieren und zurückgeben
     val command = ModelCommand("guessTransform", Map("guess" -> guess.asJson))
     val commandJson = command.asJson.noSpaces
+    print(s"Sending command to guessTransform: $commandJson")
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 

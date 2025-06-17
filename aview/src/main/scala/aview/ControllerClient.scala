@@ -30,6 +30,7 @@ class ControllerClient(baseurl:String)() {
 
   def getGuessTransform(input: String): String = {
     val url = s"$baseurl/getGuessTransform?guess=$input"
+    print(url)
     val request = HttpRequest(HttpMethods.GET, uri = url)
     val response = Await.result(Http().singleRequest(request), 30.seconds)
 

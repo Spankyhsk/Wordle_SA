@@ -73,6 +73,7 @@ class AlpakkaController {
 
   // --- Nachrichten an Kafka senden ---
   def send(record: ProducerRecord[String, String]): Unit =
+    println(s" Sende Nachricht an Kafka: ${record.value()}") // Debug-Ausgabe
     kafkaProducer.send(record)
 
   // --- UI-Events senden ---

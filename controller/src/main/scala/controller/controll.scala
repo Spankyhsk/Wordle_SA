@@ -50,6 +50,7 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient, observerCli
   }
 
   def GuessTransform(guess: String): String = {
+    println(s"Received guess in controll: $guess")
     gameClient.guessTransform(guess)
   }
 
@@ -172,7 +173,7 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient, observerCli
     persistenceClient.putGame(name)
     observerClient.triggerEvent(Event.Move)
   }
-  
+
   //AkkaKafkaControllerConsumer.consume()
 }
 

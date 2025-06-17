@@ -46,7 +46,7 @@ object Default:
     new ObserverClient(alpakkaController),
     new PersistenceClient(alpakkaController)
   )
-
+  val modelService = new ModelService()
   // Optional: Factory Methoden
 //  def createGame(): GameInterface = new Game(new GameMech(), new gameboard(), gamemode(1))
 //  def createGameWithMode(e: Int): GameInterface = new Game(new GameMech(), new gameboard(), gamemode(e))

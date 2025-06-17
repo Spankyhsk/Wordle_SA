@@ -62,6 +62,7 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
         case path if path.startsWith("/controller/getGuessTransform") =>
           val query = request.uri.query()
           val guess = query.get("guess").get
+          println(s"Received guess in controllerAPI: $guess")
           HttpResponse(entity = Json.obj("transformedGuess" -> controller.GuessTransform(guess)).toString)
         case path if path.startsWith("/controller/getControllLength") =>
           val query = request.uri.query()
@@ -153,7 +154,8 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
 
   })
 
-  AkkaKafkaControllerConsumer.consume()
+  //AkkaKafkaControllerConsumer.consume()
+  
   /**
    * Wird aufgerufen, wenn der Controller ein Event auslöst.
    * Aktuell ist diese Methode noch nicht implementiert.

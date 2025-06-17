@@ -28,7 +28,7 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
 
   val kafkaBootstrap =
     if (sys.env.get("RUNNING_IN_DOCKER").contains("true")) "kafka:9092" else "localhost:29092"
-
+  println(s"[ModelService] Kafka Bootstrap Server: $kafkaBootstrap")
   val consumerSettings = ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
     .withBootstrapServers(kafkaBootstrap)
     .withGroupId("model-command-group")
@@ -58,13 +58,16 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
 
   Consumer.plainSource(consumerSettings, Subscriptions.topics("model-commands"))
     .mapAsync(1) { msg =>
+      println(s"[Kafka] Empfange Aktion: ${msg.value()}")
       decode[ModelCommand](msg.value()) match {
         case Right(cmd) =>
           println(s"[Kafka] Bearbeite Aktion: ${cmd.action}")
           cmd.action match {
             case "createwinningboard" => Future(game.createwinningboard())
 
-            case "setN" => extractInt(cmd.data, "versuche").fold(err => Future.failed(new RuntimeException(err)), versuche => Future { game.setN(versuche)})
+            case "setN" =>
+              println(s"[Kafka] setN mit Daten: ${cmd.data}")
+              extractInt(cmd.data, "versuche").fold(err => Future.failed(new RuntimeException(err)), versuche => Future { game.setN(versuche)})
 
             case "createGameboard" => Future(game.createGameboard())
 
@@ -114,12 +117,14 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
               sendResultEvent("gameboard", Map("gameboard" -> Json.fromString(game.toString)))
             }
 
-            case "TargetwordToString" => Future {
+            case "targetwordToString" => Future {
               sendResultEvent("TargetwordToString", Map("targetWord" -> Json.fromString(game.TargetwordToString())))
             }
 
-            case "GuessTransform" => extractString(cmd.data, "guess") match {
+            case "guessTransform" => extractString(cmd.data, "guess") match {
               case Right(guess) => Future {
+                println(s"[Kafka] Received guess in ModelService: $guess")
+                println(s"[Kafka] cmd.data: ${cmd.data}")
                 sendResultEvent("GuessTransform", Map("transformedGuess" -> Json.fromString(game.GuessTransform(guess))))
               }
               case Left(err) => Future.failed(new RuntimeException(err))
