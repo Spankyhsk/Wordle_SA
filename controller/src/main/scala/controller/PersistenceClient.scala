@@ -4,23 +4,18 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest, StatusCodes}
 import akka.stream.Materializer
+import org.apache.kafka.clients.producer.ProducerRecord
 import play.api.libs.json.{Format, JsError, JsResult, JsValue, Json, OFormat}
 
 import scala.concurrent.duration.*
-
-
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
-class PersistenceClient(baseurl:String)() {
+class PersistenceClient(alpakkaController: AlpakkaController)() {
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(system)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
   def putGame(name: String): Unit = {
-    val url = s"$baseurl/putGame?name=$name"
-    val request = HttpRequest(HttpMethods.PUT, uri = url) // PUT für die "save"-Aktion
-    Await.result(Http().singleRequest(request), 30.seconds) // Warte auf die Antwort, aber ignoriere sie
-
     val command = ModelCommand("putGame?name", name)
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)

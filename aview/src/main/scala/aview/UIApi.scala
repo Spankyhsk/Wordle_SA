@@ -16,6 +16,8 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
+import io.circe.parser.*
+import io.circe.Json
 
 class UIApi()() extends Observable{
 
@@ -28,6 +30,33 @@ class UIApi()() extends Observable{
   add(TUI)
   add(GUISWING)
 
+  val kafkaBootstrap = if (sys.env.get("RUNNING_IN_DOCKER").contains("true")) "kafka:9092" else "localhost:29092"
+
+  val consumerSettings = ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
+    .withBootstrapServers(kafkaBootstrap)
+    .withGroupId("ui-event-listener")
+    .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+
+  Consumer
+    .plainSource(consumerSettings, Subscriptions.topics("ui-events"))
+    .map { msg =>
+      val jsonString = msg.value()
+
+      val eventOpt = for {
+        json <- parse(jsonString).toOption
+        eventStr <- json.hcursor.get[String]("eventType").toOption
+        event <- Event.values.find(_.toString == eventStr)
+      } yield event
+
+      eventOpt match {
+        case Some(event) =>
+          println(s" UI-Event empfangen: $event")
+          notifyObservers(event)
+        case None =>
+          println(s"⚠Konnte Event nicht erkennen in Nachricht: $jsonString")
+      }
+    }
+    .runWith(Sink.ignore)
 
   private val controllerFlow: Flow[HttpRequest, String, NotUsed] = Flow.fromGraph(GraphDSL.create() { implicit builder =>
     import GraphDSL.Implicits.*
@@ -65,16 +94,7 @@ class UIApi()() extends Observable{
         val name = req.uri.path.toString.split("/").last
         TUI.saveGame(name)
         Future.successful(HttpResponse(entity = "Spiel gespeichert"))
-
-      case req if req.uri.path.toString == "/ui/event" =>
-        req.entity.toStrict(3.seconds).map { entity =>
-          val eventJson = entity.data.utf8String
-          val eventString = (Json.parse(eventJson) \ "event").as[String]
-          val event = valueOf(eventString)
-          notifyObservers(event)
-          HttpResponse(entity = "Event empfangen")
-        }
-
+        
       case _ =>
         Future.successful(HttpResponse(status = StatusCodes.NotFound, entity = "PUT-/POST-Pfad nicht gefunden."))
     }

@@ -10,7 +10,7 @@ import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import scala.concurrent.duration.*
 
 
-class FileIOClient(baseurl:String)() {
+class FileIOClient(alpakkaController: AlpakkaController)() {
   
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(system)
