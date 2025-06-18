@@ -56,6 +56,7 @@ object wordle {
       // Check auf neues Spiel
       val newGameJson = Await.result(callApi(HttpMethods.GET, sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + "/ui/tui/getNewGame"), 30.seconds)
       val newGame = (Json.parse(newGameJson) \ "newGame").as[Boolean]
+      println(s"newGame: $newGame")
 
       if (newGame) {
         val selectText = Await.result(callApi(HttpMethods.GET, sys.env.getOrElse("AVIEW_URL", "http://localhost:8080") + "/ui/tui/Select"), 30.seconds)

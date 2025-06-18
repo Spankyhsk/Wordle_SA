@@ -11,8 +11,10 @@ import akka.http.scaladsl.server.Directives.*
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.NotUsed
+import akka.kafka.ConsumerMessage.CommittableMessage
+
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
 import io.circe.parser.*
@@ -43,10 +45,11 @@ class UIApi()() extends Observable{
     .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
   Consumer
-    .plainSource(consumerSettings, Subscriptions.topics("ui-events"))
-    .map { msg =>
-      println(s"msg ist vom Typ: " + msg.value())
-      val jsonString = msg.value()
+    .committableSource(consumerSettings, Subscriptions.topics("ui-events"))
+    .mapAsync(1) { (msg) =>
+      val jsonString = msg.record.value()
+      println(s"msg ist vom Typ: $jsonString")
+
       val eventOpt: Option[String] = for {
         json <- parse(jsonString).toOption
         event <- json.hcursor.get[String]("eventType").toOption
@@ -54,11 +57,13 @@ class UIApi()() extends Observable{
 
       eventOpt match {
         case Some(event) =>
-          println(s" UI-Event empfangen: $event")
+          println(s"✅ UI-Event empfangen: $event")
           notifyObservers(Event.valueOf(event))
         case None =>
-          println(s"⚠Konnte Event nicht erkennen in Nachricht: $jsonString")
+          println(s"⚠️ Konnte Event nicht erkennen in Nachricht: $jsonString")
       }
+
+      msg.committableOffset.commitScaladsl()
     }
     .runWith(Sink.ignore)
 

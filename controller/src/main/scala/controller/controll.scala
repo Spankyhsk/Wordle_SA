@@ -73,6 +73,7 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient, observerCli
 
   def createwinningboard(): Unit = {
     gameClient.createWinningBoard()
+    println("createWinningboard wird getriggert")
     notifyObservers(Event.Move)
     observerClient.triggerEvent(Move)
   }

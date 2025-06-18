@@ -3,21 +3,22 @@ package controller
 import akka.actor.ActorSystem
 import akka.kafka.{ConsumerSettings, ProducerSettings, Subscriptions}
 import akka.kafka.scaladsl.Consumer
-import akka.stream.{Materializer}
+import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializer}
+
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.ExecutionContextExecutor
-import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
-import util.Event // dein Enum, z. B. Event.GameStarted, etc.
-import ModelCommand._
-import ResultEvent._
-
-import io.circe.generic.semiauto._
+import io.circe.*
+import io.circe.parser.*
+import io.circe.syntax.*
+import util.Event
+import ModelCommand.*
+import ResultEvent.*
+import akka.kafka.ConsumerMessage.CommittableMessage
+import io.circe.generic.semiauto.*
 
 case class ModelCommand(action: String, data: Map[String, io.circe.Json])
 
@@ -60,15 +61,18 @@ class AlpakkaController {
   // --- Kafka Consumer: Ergebnisse vom Model empfangen ---
   //todo: Hier bin ich stehen geblieben -Cilas
   Consumer
-    .plainSource(consumerSettings, Subscriptions.topics("model-result"))
-    .map { msg =>
-      decode[ResultEvent](msg.value()) match {
+    .committableSource(consumerSettings, Subscriptions.topics("model-result"))
+    .mapAsync(1) { (msg: CommittableMessage[String, String]) =>
+      decode[ResultEvent](msg.record.value()) match {
         case Right(result) =>
-          println(s" Ergebnis vom Model empfangen: $result")
-          resultCache.put(result.action, result) // oder ein anderer eindeutiger Key
+          println(s"✅ Ergebnis vom Model empfangen: $result")
+          resultCache.put(result.action, result)
         case Left(error) =>
-          println(s"Fehler beim Parsen von JSON im Controller: $error\nPayload war: ${msg.value()}")
+          println(s"❌ Fehler beim Parsen von JSON im Controller: $error\nPayload war: ${msg.record.value()}")
       }
+
+      // Offset committen, damit Nachricht als verarbeitet gilt
+      msg.committableOffset.commitScaladsl()
     }
     .runWith(Sink.ignore)
 

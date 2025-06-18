@@ -242,12 +242,12 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val entity = Await.result(entityFuture, 30.seconds)
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    (jsonResponse \ "gameboard").as[String] // Das "gameboard"-Feld extrahieren und zurückgeben
-    val command = ModelCommand("toString", null)
+    val command = ModelCommand("gameboard", null)
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
-    alpakkaController.resultCache.get("toString") match {
+    alpakkaController.resultCache.get("gameboard") match {
       case Some(result) => result.data.get("gameboard").flatMap(_.asString).getOrElse(
         throw new RuntimeException("Kein 'gameboard'-Feld im Ergebnis gefunden")
       )

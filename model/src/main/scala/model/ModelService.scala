@@ -56,22 +56,29 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
       case (k, v) if v.isString => k.toInt -> v.asString.get
     }).toRight("Feedback fehlt oder nicht im richtigen Format")
 
-  Consumer.plainSource(consumerSettings, Subscriptions.topics("model-commands"))
+  Consumer
+    .committableSource(consumerSettings, Subscriptions.topics("model-commands"))
     .mapAsync(1) { msg =>
-      println(s"[Kafka] Empfange Aktion: ${msg.value()}")
-      decode[ModelCommand](msg.value()) match {
+      val jsonString = msg.record.value()
+      println(s"[Kafka] Empfange Aktion: $jsonString")
+
+      decode[ModelCommand](jsonString) match {
         case Right(cmd) =>
           println(s"[Kafka] Bearbeite Aktion: ${cmd.action}")
-          cmd.action match {
+          val futureResult: Future[_] = cmd.action match {
             case "createwinningboard" => Future(game.createwinningboard())
 
             case "setN" =>
               println(s"[Kafka] setN mit Daten: ${cmd.data}")
-              extractInt(cmd.data, "versuche").fold(err => Future.failed(new RuntimeException(err)), versuche => Future { game.setN(versuche)})
+              extractInt(cmd.data, "versuche")
+                .fold(err => Future.failed(new RuntimeException(err)), versuche => Future(game.setN(versuche)))
 
             case "createGameboard" => Future(game.createGameboard())
 
-            case "changeState" => extractInt(cmd.data, "level").map(game.changeState).fold(err => Future.failed(new RuntimeException(err)), Future.successful)
+            case "changeState" =>
+              extractInt(cmd.data, "level")
+                .map(game.changeState)
+                .fold(err => Future.failed(new RuntimeException(err)), Future.successful)
 
             case "save" => Future(fileIO.save(game))
 
@@ -80,7 +87,10 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
               sendResultEvent("load", Map("result" -> Json.fromString(result)))
             }
 
-            case "putGame" => extractString(cmd.data, "name").map(db.save(game, _)).fold(err => Future.failed(new RuntimeException(err)), Future.successful)
+            case "putGame" =>
+              extractString(cmd.data, "name")
+                .map(db.save(game, _))
+                .fold(err => Future.failed(new RuntimeException(err)), Future.successful)
 
             case "getGame" =>
               cmd.data.get("gameId").flatMap(_.asNumber.flatMap(_.toLong)) match {
@@ -155,9 +165,12 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
 
             case other => Future.failed(new RuntimeException(s"Unbekannte Aktion: $other"))
           }
+
+          futureResult.map(_ => msg.committableOffset.commitScaladsl())
+
         case Left(err) =>
-          println(s"[Kafka] Fehler beim JSON-Parsing: $err")
-          Future.unit
+          println(s"[Kafka] ❌ Fehler beim JSON-Parsing: $err")
+          msg.committableOffset.commitScaladsl() // Optional: commit trotzdem
       }
     }
     .runWith(Sink.ignore)
