@@ -29,7 +29,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def getGuessTransform(input: String): String = {
-    val url = s"$baseurl/getGuessTransform/$input"
+    val url = s"$baseurl/getGuessTransform?guess=$input"
     val request = HttpRequest(HttpMethods.GET, uri = url)
     val response = Await.result(Http().singleRequest(request), 30.seconds)
 
@@ -39,7 +39,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def getControllLength(length: Int): Boolean = {
-    val url = s"$baseurl/getControllLength/$length"
+    val url = s"$baseurl/getControllLength?length=$length"
     val request = HttpRequest(HttpMethods.GET, uri = url)
     val response = Await.result(Http().singleRequest(request), 30.seconds)
 
@@ -49,7 +49,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def getControllRealWord(guess: String): Boolean = {
-    val url = s"$baseurl/getControllRealWord/$guess"
+    val url = s"$baseurl/getControllRealWord?guess=$guess"
     val request = HttpRequest(HttpMethods.GET, uri = url)
     val response = Await.result(Http().singleRequest(request), 30.seconds)
 
@@ -59,7 +59,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def getAreYouWinningSon(guess: String): Boolean = {
-    val url = s"$baseurl/getAreYouWinningSon/$guess"
+    val url = s"$baseurl/getAreYouWinningSon?guess=$guess"
     val request = HttpRequest(HttpMethods.GET, uri = url)
     val response = Await.result(Http().singleRequest(request), 30.seconds)
 
@@ -79,7 +79,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def getEvaluateGuess(guess: String): Map[Int, String] = {
-    val url = s"$baseurl/getEvaluateGuess/$guess"
+    val url = s"$baseurl/getEvaluateGuess?guess=$guess"
     val request = HttpRequest(HttpMethods.GET, uri = url)
     val response = Await.result(Http().singleRequest(request), 30.seconds)
 
@@ -92,13 +92,13 @@ class ControllerClient(baseurl:String)() {
   }
 
   def putMove(versuche: Int, feedback: Map[Int, String]): Unit = {
-    val url = s"$baseurl/putMove/$versuche"
+    val url = s"$baseurl/putMove?move=$versuche"
     val json: JsValue = Json.toJson(feedback)
     val entity = HttpEntity(ContentTypes.`application/json`, Json.stringify(json))
 
     val request = HttpRequest(
       method = HttpMethods.PUT,
-      uri = s"$baseurl/putMove/$versuche",
+      uri = url,
       entity = entity
     )
 
@@ -106,7 +106,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def putVersuche(versuche: Int): Unit = {
-    val url = s"$baseurl/putVersuche/$versuche"
+    val url = s"$baseurl/putVersuche?versuche=$versuche"
     val request = HttpRequest(HttpMethods.PUT, uri = url)
     val response = Await.result(Http().singleRequest(request), 30.seconds)
 
@@ -118,7 +118,7 @@ class ControllerClient(baseurl:String)() {
   }
 
   def patchChangeState(level: Int): Unit = {
-    val url = s"$baseurl/patchChangeState/$level"
+    val url = s"$baseurl/patchChangeState?state=$level"
     val request = HttpRequest(HttpMethods.PATCH, uri = url)
     val response = Await.result(Http().singleRequest(request), 30.seconds)
 
@@ -208,13 +208,13 @@ class ControllerClient(baseurl:String)() {
   }
   
   def putGame(name:String):Unit ={
-    val url = s"$baseurl/putGame/$name"
+    val url = s"$baseurl/putGame?name=$name"
     val request = HttpRequest(HttpMethods.PUT, uri = url)
     val response = Await.result(Http().singleRequest(request), 30.seconds)
   }
 
   def getGame(gameId:Long): Unit = {
-    val url = s"$baseurl/getGame/$gameId"
+    val url = s"$baseurl/getGame?gameId=$gameId"
     val request = HttpRequest(HttpMethods.PUT, uri = url)
     val response = Await.result(Http().singleRequest(request), 30.seconds)
   }
