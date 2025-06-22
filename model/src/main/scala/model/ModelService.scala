@@ -66,7 +66,9 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
         case Right(cmd) =>
           println(s"[Kafka] Bearbeite Aktion: ${cmd.action}")
           val futureResult: Future[_] = cmd.action match {
-            case "createwinningboard" => Future(game.createwinningboard())
+            case "createwinningboard" => 
+              println("createWinningboard wird in Modelservice getriggert")
+              Future(game.createwinningboard())
 
             case "setN" =>
               println(s"[Kafka] setN mit Daten: ${cmd.data}")

@@ -17,6 +17,12 @@ class ControllerClient(baseurl:String)() {
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: Materializer = Materializer(system)
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+  
+  def startGame(): Unit = {
+    val url = s"$baseurl/startGame"
+    val request = HttpRequest(HttpMethods.PUT, uri = url)
+    val response = Await.result(Http().singleRequest(request), 30.seconds)
+  }
 
   def getCount(): Boolean = {
     val url = s"$baseurl/getCount"

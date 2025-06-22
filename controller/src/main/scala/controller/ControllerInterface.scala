@@ -4,7 +4,8 @@ import util.Observable
 import scala.util.{Failure, Success, Try}
 
 trait ControllerInterface extends Observable{
-  
+
+  def startGame():Unit
   //==========================================================
   
               //!!!GAME!!!

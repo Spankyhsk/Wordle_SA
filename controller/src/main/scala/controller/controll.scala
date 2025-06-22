@@ -9,6 +9,10 @@ import util.{Event, Observable, UndoManager}
 case class controll (gameClient:GameClient, fileClient:FileIOClient, observerClient:ObserverClient, persistenceClient: PersistenceClient)extends ControllerInterface with Observable {
 
 
+  def startGame():Unit ={
+    observerClient.triggerEvent(NEW)
+    //observerClient.triggerEvent(Move)
+  }
   //============================================================================
 
             //!!!GAME!!!
@@ -74,8 +78,8 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient, observerCli
   def createwinningboard(): Unit = {
     gameClient.createWinningBoard()
     println("createWinningboard wird getriggert")
-    notifyObservers(Event.Move)
-    observerClient.triggerEvent(Move)
+//    notifyObservers(Event.Move)
+    //observerClient.triggerEvent(Move)
   }
 
   //----------------------------------------------------------------------------
@@ -87,6 +91,7 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient, observerCli
 
   def createGameboard(): Unit = {
     gameClient.createGameboard()
+    println(s"gameboard: ${gameClient.gameToString}")
   }
 
   override def toString: String = {
@@ -102,8 +107,8 @@ case class controll (gameClient:GameClient, fileClient:FileIOClient, observerCli
 
   def changeState(e: Int): Unit = {
     gameClient.changeState(e)
-    notifyObservers(Event.NEW)
-    observerClient.triggerEvent(NEW)
+    //notifyObservers(Event.NEW)
+    //observerClient.triggerEvent(NEW)
   }
 
 

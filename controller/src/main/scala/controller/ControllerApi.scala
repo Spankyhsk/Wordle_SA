@@ -103,6 +103,9 @@ class ControllerApi(using var controller: ControllerInterface) extends Observer 
         case "/controller/putUndoMove" =>
           controller.undo()
           Future.successful(HttpResponse(entity = "Move undone"))
+        case "/controller/startGame" =>
+          controller.startGame()
+          Future.successful(HttpResponse(entity = "Spiel gestartet"))
         case path if path.startsWith("/controller/putVersuche") =>
           val query = request.uri.query()
           val versuche = query.get("versuche").get.toInt

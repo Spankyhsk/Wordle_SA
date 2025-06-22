@@ -22,6 +22,8 @@ class TUI (controllerClient: ControllerClient)extends Observer:
       controllerClient.patchChangeState(difficultyLevel(input))
       controllerClient.putCreateGameboard()
       controllerClient.putCreateWinningBoard()
+      controllerClient.startGame()
+
     }else{
       scanInput(input)
     }
@@ -114,6 +116,10 @@ class TUI (controllerClient: ControllerClient)extends Observer:
         controllerClient.putVersuche(1)
         newgame = false
         println("Errate Wort:") //guess
+        println(controllerClient.getGameBoard())
+        if (!newgame) {
+          println("Dein Tipp: ")
+        }
       }
       case Event.UNDO=>{
         controllerClient.putVersuche(controllerClient.getVersuche()-1)

@@ -45,6 +45,10 @@ class GUISWING(controllerClient: ControllerClient) extends Frame with Observer {
         controllerClient.putVersuche(1)
         inputTextField.enabled = true
         editDoneEventFired = true
+        upgradeOutput()
+        if (editDoneEventFired) {
+          NEWSPanel.updateNewsBoardText("Finde das versteckte Wort! Gib dein Tipp ab...")
+        }
       }
       case Event.WIN =>{
         NEWSPanel.updateNewsBoardText(s"Gewonnen! Lösung: ${controllerClient.getTargetwordString()}\n Zum erneuten Spielen Schwierigkeitsgrad aussuchen")
@@ -305,6 +309,7 @@ class GUISWING(controllerClient: ControllerClient) extends Frame with Observer {
       controllerClient.patchChangeState(1)
       controllerClient.putCreateGameboard()
       controllerClient.putCreateWinningBoard()
+      controllerClient.startGame()
 
     case ButtonClicked(MediummodusButton) =>
 
@@ -312,6 +317,8 @@ class GUISWING(controllerClient: ControllerClient) extends Frame with Observer {
       controllerClient.patchChangeState(2)
       controllerClient.putCreateGameboard()
       controllerClient.putCreateWinningBoard()
+      controllerClient.startGame()
+
 
     case ButtonClicked(HardmodusButton) =>
 
@@ -319,6 +326,8 @@ class GUISWING(controllerClient: ControllerClient) extends Frame with Observer {
       controllerClient.patchChangeState(3)
       controllerClient.putCreateGameboard()
       controllerClient.putCreateWinningBoard()
+      controllerClient.startGame()
+
 
   }
 
