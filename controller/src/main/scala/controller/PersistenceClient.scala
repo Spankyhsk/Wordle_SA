@@ -5,12 +5,12 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest, StatusCodes}
 import akka.stream.Materializer
 import org.apache.kafka.clients.producer.ProducerRecord
-import io.circe.syntax._
+import io.circe.syntax.*
 import io.circe.Json
-import io.circe.generic.auto._
+import io.circe.generic.auto.*
 
 import scala.concurrent.duration.*
-import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, ExecutionContextExecutor, Future, Promise}
 
 class PersistenceClient(alpakkaController: AlpakkaController)() {
   implicit val system: ActorSystem = ActorSystem()
@@ -22,11 +22,6 @@ class PersistenceClient(alpakkaController: AlpakkaController)() {
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
-
-    alpakkaController.resultCache.get("putGame") match {
-      case Some(result) => result.data.get("continue").flatMap(_.asString)
-      case None => throw new RuntimeException("putGame-Aufruf hat nicht richtig geklappt")
-    }
   }
 
   def getGame(gameId: Long): Unit = {
@@ -35,23 +30,22 @@ class PersistenceClient(alpakkaController: AlpakkaController)() {
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
-    alpakkaController.resultCache.get("getGame") match {
-      case Some(result) => result.data.get("continue").flatMap(_.asString)
-      case None => throw new RuntimeException("getGame-Aufruf hat nicht richtig geklappt")
-    }
-
   }
 
   def search(): String = {
+    val promise = Promise[ResultEvent]()
+    alpakkaController.pendingResults.put("search", promise)
+
     val command = ModelCommand("search", Map.empty)
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
-
-    alpakkaController.resultCache.get("search") match {
-      case Some(result) => result.data.get("continue").flatMap(_.asString).getOrElse("Kein Ergebnis")
-      case None => throw new RuntimeException("search-Aufruf hat nicht richtig geklappt")
-    }
-
+    
+    val result = Await.result(promise.future, 5.seconds)
+    val resultData = result.data.get("search").flatMap(_.asString).getOrElse(
+      throw new RuntimeException("Kein 'result'-Feld im Ergebnis gefunden")
+    )
+    println(s"✅ Ergebnis von search: $resultData")
+    resultData
   }
 }

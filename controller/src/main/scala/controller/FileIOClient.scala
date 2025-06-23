@@ -4,6 +4,8 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpMethods, HttpRequest, HttpResponse}
 import akka.stream.Materializer
+
+import scala.concurrent.Promise
 //import play.api.libs.json.Json
 
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
@@ -41,16 +43,19 @@ class FileIOClient(alpakkaController: AlpakkaController)() {
 //
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    (jsonResponse \ "result").as[String] // Das "result"-Feld extrahieren und zurückgeben
+    val promise = Promise[ResultEvent]()
+    alpakkaController.pendingResults.put("load", promise)
+    
     val command = ModelCommand("load", null)
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
-    alpakkaController.resultCache.get("load") match {
-      case Some(result) => result.data.get("result").flatMap(_.asString).getOrElse(
-        throw new RuntimeException("Kein 'result'-Feld im Ergebnis gefunden")
-      )
-      case None => throw new RuntimeException("load aufruf hat nicht richtig geklappt")
-    }
+    val result = Await.result(promise.future, 5.seconds)
+    val resultData = result.data.get("result").flatMap(_.asString).getOrElse(
+      throw new RuntimeException("Kein 'result'-Feld im Ergebnis gefunden")
+    )
+    println(s"✅ Ergebnis von guessTransform: resultData")
+    resultData
   }
 }

@@ -8,6 +8,8 @@ import akka.stream.scaladsl.Sink
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.{StringDeserializer, StringSerializer}
+import scala.concurrent.{Promise}
+
 
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.ExecutionContextExecutor
@@ -56,7 +58,7 @@ class AlpakkaController {
   private val kafkaProducer = producerSettings.createKafkaProducer()
 
   // --- Ergebnis-Speicher ---
-  val resultCache: TrieMap[String, ResultEvent] = TrieMap.empty
+  val pendingResults: TrieMap[String, Promise[ResultEvent]] = TrieMap.empty
 
   // --- Kafka Consumer: Ergebnisse vom Model empfangen ---
   //todo: Hier bin ich stehen geblieben -Cilas
@@ -66,7 +68,10 @@ class AlpakkaController {
       decode[ResultEvent](msg.record.value()) match {
         case Right(result) =>
           println(s"✅ Ergebnis vom Model empfangen: $result")
-          resultCache.put(result.action, result)
+          pendingResults.remove(result.action) match {
+            case Some(promise) => promise.success(result)
+            case None => println(s"⚠️ Kein offener Empfänger für Aktion '${result.action}'")
+          }
         case Left(error) =>
           println(s"❌ Fehler beim Parsen von JSON im Controller: $error\nPayload war: ${msg.record.value()}")
       }

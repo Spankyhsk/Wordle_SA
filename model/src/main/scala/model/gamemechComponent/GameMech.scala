@@ -44,7 +44,11 @@ case class GameMech(
   }
 
 
-  def GuessTransform(guess: String): String = guess.toUpperCase
+  def GuessTransform(guess: String): String = {
+    val test = guess.toUpperCase
+    println(s"Received guess in GameMech: $test")
+    test
+  }
 
   def resetWinningBoard(size: Int): GameMech = {
     winningBoard.clear()

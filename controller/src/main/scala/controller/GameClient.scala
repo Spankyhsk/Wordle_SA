@@ -16,7 +16,8 @@ import io.circe.syntax._ // für .asJson
 import io.circe.generic.auto._ // erstellt Encoder/Decoder automatisch
 
 import scala.concurrent.duration.*
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.{Promise, Await, ExecutionContext, ExecutionContextExecutor, Future}
+
 
 import org.apache.kafka.clients.producer.ProducerRecord
 import io.circe.Json
@@ -60,16 +61,20 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val entity = Await.result(entityFuture, 30.seconds)
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    (jsonResponse \ "continue").as[Boolean] // Das "continue"-Feld extrahieren und zurückgeben
+    val promise = Promise[ResultEvent]()
+    alpakkaController.pendingResults.put("count", promise)
+    
     val command = ModelCommand("count", null)
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
-    alpakkaController.resultCache.get("count") match{
-      case Some(result) => result.data.get("continue").flatMap(_.asBoolean).getOrElse(
-        throw new RuntimeException("Kein 'continue'-Feld im Ergebnis gefunden")
-      )
-    }
+    val result = Await.result(promise.future, 5.seconds)
+    val resultData = result.data.get("continue").flatMap(_.asBoolean).getOrElse(
+      throw new RuntimeException("Kein 'continue'-Feld im Ergebnis gefunden")
+    )
+    println(s"✅ Ergebnis von count: $resultData")
+    resultData
   }
 
   def controllLength(n: Int): Boolean = {
@@ -82,16 +87,20 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val entity = Await.result(entityFuture, 30.seconds)
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    (jsonResponse \ "result").as[Boolean] // Das "result"-Feld extrahieren und zurückgeben
+    val promise = Promise[ResultEvent]()
+    alpakkaController.pendingResults.put("controllLength", promise)
+    
     val command = ModelCommand("controllLength", Map("length" -> n.asJson))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
-
-    alpakkaController.resultCache.get("controllLength") match {
-      case Some(result) => result.data.get("result").flatMap(_.asBoolean).getOrElse(
-        throw new RuntimeException("Kein 'result'-Feld im Ergebnis gefunden")
-      )
-    }
+    
+    val result = Await.result(promise.future, 5.seconds)
+    val resultData = result.data.get("controllLength").flatMap(_.asBoolean).getOrElse(
+      throw new RuntimeException("Kein 'result'-Feld im Ergebnis gefunden")
+    )
+    println(s"✅ Ergebnis von controllLength: $resultData")
+    resultData
   }
 
   def controllRealWord(guess: String): Boolean = {
@@ -103,17 +112,20 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val entity = Await.result(entityFuture, 30.seconds)
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    (jsonResponse \ "result").as[Boolean] // Das "result"-Feld extrahieren und zurückgeben
+    val promise = Promise[ResultEvent]()
+    alpakkaController.pendingResults.put("controllRealWord", promise)
+    
     val command = ModelCommand("controllRealWord", Map("guess" -> guess.asJson))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
-    alpakkaController.resultCache.get("controllRealWord") match {
-      case Some(result) => result.data.get("result").flatMap(_.asBoolean).getOrElse(
-        throw new RuntimeException("Kein 'result'-Feld im Ergebnis gefunden")
-      )
-      case None => throw(new RuntimeException("controllRealWord aufruf hat nicht richtig geklappt"))
-    }
+    val result = Await.result(promise.future, 5.seconds)
+    val resultData = result.data.get("controllRealWord").flatMap(_.asBoolean).getOrElse(
+      throw new RuntimeException("Kein 'result'-Feld im Ergebnis gefunden")
+    )
+    println(s"✅ Ergebnis von controllRealWord: $resultData")
+    resultData
   }
 
   def evaluateGuess(guess: String): Map[Int, String] = {
@@ -127,15 +139,25 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    // JSON parsen und als Map[Int, String] zurückgeben
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    jsonResponse.as[Map[Int, String]]
+    val promise = Promise[ResultEvent]()
+    alpakkaController.pendingResults.put("evaluateGuess", promise)
+    
     val command = ModelCommand("evaluateGuess", Map("guess" -> guess.asJson))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
-    alpakkaController.resultCache.get("evaluateGuess") match {
-      case Some(result) => result.data.get("result").asInstanceOf[Map[Int, String]]
-      case None => throw(new RuntimeException("evaluateGuess aufruf hat nicht richtig geklappt"))
+    val result = Await.result(promise.future, 5.seconds)
+    val data = result.data.get("evaluateGuess").getOrElse(
+      throw new RuntimeException("Kein 'evaluateGuess'-Feld im Ergebnis gefunden")
+    )
+    
+    val map = io.circe.parser.decode[Map[Int, String]](data.toString) match {
+      case Right(value) => value
+      case Left(error) => throw new RuntimeException(s"Fehler beim Parsen von 'evaluateGuess': $error")
     }
+    println(s"✅ Ergebnis von evaluateGuess: $map")
+    map
   }
 
   def guessTransform(guess: String): String = {
@@ -147,18 +169,22 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val entity = Await.result(entityFuture, 30.seconds)
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    (jsonResponse \ "transformedGuess").as[String] // Das "transformedGuess"-Feld extrahieren und zurückgeben
+    val promise = Promise[ResultEvent]()
+    alpakkaController.pendingResults.put("guessTransform", promise)
+
     val command = ModelCommand("guessTransform", Map("guess" -> guess.asJson))
     val commandJson = command.asJson.noSpaces
     print(s"Sending command to guessTransform: $commandJson")
+
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
-    alpakkaController.resultCache.get("guessTransform") match {
-      case Some(result) => result.data.get("transformedGuess").flatMap(_.asString).getOrElse(
-        throw new RuntimeException("Kein 'transformedGuess'-Feld im Ergebnis gefunden")
-      )
-      case None => throw(new RuntimeException("guessTransform aufruf hat nicht richtig geklappt"))
-    }
+    val result = Await.result(promise.future, 5.seconds)
+    val transformed = result.data.get("transformedGuess").flatMap(_.asString).getOrElse(
+      throw new RuntimeException("Kein 'transformedGuess'-Feld im Ergebnis gefunden")
+    )
+    println(s"✅ Ergebnis von guessTransform: $transformed")
+    transformed
   }
 
   def setVersuche(zahl: Integer): Unit = {
@@ -180,15 +206,20 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val entity = Await.result(entityFuture, 30.seconds)
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    (jsonResponse \ "result").as[Int] // Das "result"-Feld extrahieren und zurückgeben
+    val promise = Promise[ResultEvent]()
+    alpakkaController.pendingResults.put("getN", promise)
+    
     val command = ModelCommand("getN", null)
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
-
-    alpakkaController.resultCache.get("getN") match {
-      case Some(result) => result.data.get("result").asInstanceOf[Int]
-      case None => throw(new RuntimeException("getN aufruf hat nicht richtig geklappt"))
-    }
+    
+    val result = Await.result(promise.future, 5.seconds)
+    val resultData = result.data.get("getN").flatMap(_.asNumber.flatMap(_.toInt)).getOrElse(
+      throw new RuntimeException("Kein 'getN'-Feld im Ergebnis gefunden")
+    )
+    println(s"✅ Ergebnis von getVersuche: $resultData")
+    resultData
   }
 
   def areYouWinningSon(guess: String): Boolean = {
@@ -200,17 +231,20 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val entity = Await.result(entityFuture, 30.seconds)
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    (jsonResponse \ "won").as[Boolean] // Das "won"-Feld extrahieren und zurückgeben
+    val promise = Promise[ResultEvent]()
+    alpakkaController.pendingResults.put("areYouWinningSon", promise)
+    
     val command = ModelCommand("areYouWinningSon", Map("guess" -> guess.asJson))
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
-
-    alpakkaController.resultCache.get("areYouWinningSon") match {
-      case Some(result) => result.data.get("won").flatMap(_.asBoolean).getOrElse(
-        throw new RuntimeException("Kein 'won'-Feld im Ergebnis gefunden")
-      )
-      case None => throw(new RuntimeException("areYouWinningSon aufruf hat nicht richtig geklappt"))
-    }
+    
+    val result = Await.result(promise.future, 5.seconds)
+    val resultData = result.data.get("areYouWinningSon").flatMap(_.asBoolean).getOrElse(
+      throw new RuntimeException("Kein 'won'-Feld im Ergebnis gefunden")
+    )
+    println(s"✅ Ergebnis von areYouWinningSon: $resultData")
+    resultData
   }
 
   def createWinningBoard(): Unit = {
@@ -242,17 +276,20 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val entity = Await.result(entityFuture, 30.seconds)
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    (jsonResponse \ "gameboard").as[String] // Das "gameboard"-Feld extrahieren und zurückgeben
+    val promise = Promise[ResultEvent]()
+    alpakkaController.pendingResults.put("gameboard", promise)
+    
     val command = ModelCommand("gameboard", null)
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
-
-    alpakkaController.resultCache.get("gameboard") match {
-      case Some(result) => result.data.get("gameboard").flatMap(_.asString).getOrElse(
-        throw new RuntimeException("Kein 'gameboard'-Feld im Ergebnis gefunden")
-      )
-      case None => throw(new RuntimeException("toString aufruf hat nicht richtig geklappt"))
-    }
+    
+    val result = Await.result(promise.future, 5.seconds)
+    val resultData = result.data.get("gameboard").flatMap(_.asString).getOrElse(
+      throw new RuntimeException("Kein 'gameboard'-Feld im Ergebnis gefunden")
+    )
+    println(s"✅ Ergebnis von gameToString: $resultData")
+    resultData
   }
 
   def changeState(e: Int): Unit = {
@@ -274,17 +311,20 @@ class GameClient(alpakkaController: AlpakkaController)() {
 //    val entity = Await.result(entityFuture, 30.seconds)
 //    val jsonResponse = Json.parse(entity.data.utf8String)
 //    (jsonResponse \ "targetWord").as[String] // Das "targetWord"-Feld extrahieren und zurückgeben
+    val promise = Promise[ResultEvent]()
+    alpakkaController.pendingResults.put("TargetwordToString", promise)
+    
     val command = ModelCommand("TargetwordToString", null)
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
 
-    alpakkaController.resultCache.get("TargetwordToString") match {
-      case Some(result) => result.data.get("targetWord").flatMap(_.asString).getOrElse(
-        throw new RuntimeException("Kein 'targetWord'-Feld im Ergebnis gefunden")
-      )
-      case None => throw(new RuntimeException("TargetwordToString aufruf hat nicht richtig geklappt"))
-    }
+    val result = Await.result(promise.future, 5.seconds)
+    val resultData = result.data.get("targetWord").flatMap(_.asString).getOrElse(
+      throw new RuntimeException("Kein 'targetWord'-Feld im Ergebnis gefunden")
+    )
+    println(s"✅ Ergebnis von targetWordToString: $resultData")
+    resultData
   }
 
 

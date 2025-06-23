@@ -137,7 +137,9 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
               case Right(guess) => Future {
                 println(s"[Kafka] Received guess in ModelService: $guess")
                 println(s"[Kafka] cmd.data: ${cmd.data}")
-                sendResultEvent("GuessTransform", Map("transformedGuess" -> Json.fromString(game.GuessTransform(guess))))
+                val map = Map("transformedGuess" -> Json.fromString(game.GuessTransform(guess)))
+                sendResultEvent("GuessTransform", map)
+                println(s"[Kafka] Transformed guess sent: ${map("transformedGuess")}")
               }
               case Left(err) => Future.failed(new RuntimeException(err))
             }
