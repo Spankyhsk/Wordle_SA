@@ -65,6 +65,8 @@ class AlpakkaController {
   Consumer
     .committableSource(consumerSettings, Subscriptions.topics("model-result"))
     .mapAsync(1) { (msg: CommittableMessage[String, String]) =>
+      println(s"📩 Empfange rohen Kafka-Wert: ${msg.record.value()}")
+      println(s"📩 Decode: ${decode[ResultEvent](msg.record.value())}")
       decode[ResultEvent](msg.record.value()) match {
         case Right(result) =>
           println(s"✅ Ergebnis vom Model empfangen: $result")

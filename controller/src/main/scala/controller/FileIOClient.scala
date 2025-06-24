@@ -26,7 +26,7 @@ class FileIOClient(alpakkaController: AlpakkaController)() {
 //    val url = s"$baseurl/save"
 //    val request = HttpRequest(HttpMethods.POST, uri = url) // PUT für die "save"-Aktion
 //    Await.result(Http().singleRequest(request), 5.seconds) // Warte auf die Antwort, aber ignoriere sie
-    val command = ModelCommand("save", null)
+    val command = ModelCommand("save", Map.empty)
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)
@@ -46,7 +46,7 @@ class FileIOClient(alpakkaController: AlpakkaController)() {
     val promise = Promise[ResultEvent]()
     alpakkaController.pendingResults.put("load", promise)
     
-    val command = ModelCommand("load", null)
+    val command = ModelCommand("load", Map.empty)
     val commandJson = command.asJson.noSpaces
     val record = new ProducerRecord[String, String]("model-commands", commandJson)
     alpakkaController.send(record)

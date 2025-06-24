@@ -118,15 +118,22 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
               }
 
             case "count" => Future {
-              sendResultEvent("count", Map("continue" -> Json.fromBoolean(game.count())))
+              sendResultEvent("Count", Map("continue" -> Json.fromBoolean(game.count())))
             }
 
             case "getN" => Future {
-              sendResultEvent("getN", Map("result" -> Json.fromInt(game.getN())))
+              sendResultEvent("GetN", Map("result" -> Json.fromInt(game.getN())))
+            }
+
+            case "areYouWinningSon" => extractString(cmd.data, "guess") match {
+              case Right(guess) => Future {
+                sendResultEvent("AreYouWinningSon", Map("guess" -> Json.fromBoolean(game.areYouWinningSon(guess))))
+              }
+              case Left(err) => Future.failed(new RuntimeException(err))
             }
 
             case "gameboard" => Future {
-              sendResultEvent("gameboard", Map("gameboard" -> Json.fromString(game.toString)))
+              sendResultEvent("Gameboard", Map("gameboard" -> Json.fromString(game.toString)))
             }
 
             case "targetwordToString" => Future {
@@ -146,14 +153,14 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
 
             case "controllLength" => extractInt(cmd.data, "length") match {
               case Right(length) => Future {
-                sendResultEvent("controllLength", Map("result" -> Json.fromBoolean(game.controllLength(length))))
+                sendResultEvent("ControllLength", Map("result" -> Json.fromBoolean(game.controllLength(length))))
               }
               case Left(err) => Future.failed(new RuntimeException(err))
             }
 
             case "controllRealWord" => extractString(cmd.data, "guess") match {
               case Right(guess) => Future {
-                sendResultEvent("controllRealWord", Map("result" -> Json.fromBoolean(game.controllRealWord(guess))))
+                sendResultEvent("ControllRealWord", Map("result" -> Json.fromBoolean(game.controllRealWord(guess))))
               }
               case Left(err) => Future.failed(new RuntimeException(err))
             }
@@ -162,7 +169,7 @@ class ModelService(using var game: GameInterface, var fileIO: FileIOInterface, v
               case Right(guess) => Future {
                 val result = game.evaluateGuess(guess)
                 val jsonResult = result.map { case (k, v) => k.toString -> Json.fromString(v) }
-                sendResultEvent("evaluateGuess", Map("result" -> Json.obj(jsonResult.toSeq: _*)))
+                sendResultEvent("EvaluateGuess", Map("result" -> Json.obj(jsonResult.toSeq: _*)))
               }
               case Left(err) => Future.failed(new RuntimeException(err))
             }
